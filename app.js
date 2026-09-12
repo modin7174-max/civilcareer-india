@@ -49,3 +49,20 @@ if ("serviceWorker" in navigator) {
       .catch((err) => console.error("SW error:", err));
   });
 }
+// Function to generate pre-filled WhatsApp share link
+function getWhatsAppShareUrl(job) {
+  const title = job.role || 'Civil Engineering Job';
+  const company = job.company || job.recruitment_authority || 'Govt Department';
+  const salary = job.salary ? `💰 Salary: ${job.salary}\n` : '';
+  const deadline = job.deadline ? `⏳ Last Date: ${new Date(job.deadline).toLocaleDateString('en-IN')}\n` : '';
+  const currentUrl = window.location.origin + window.location.pathname;
+
+  const message = `📢 *Civil Job Update*\n\n` +
+                  `📌 *Role:* ${title}\n` +
+                  `🏢 *Dept:* ${company}\n` +
+                  salary +
+                  deadline +
+                  `\n🔗 Apply & View Details: ${currentUrl}`;
+
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+}
