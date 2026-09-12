@@ -31,3 +31,17 @@ function updateFilterUrl(){if(route!=='private')return;const p=new URLSearchPara
 const oldRenderAdmin=renderAdminLists;renderAdminLists=function(emp,res,reports){oldRenderAdmin(emp,res,reports);if(!$('showExpiredAdmin').checked)$$('#adminJobs .admin-list-item').forEach((el,i)=>{if(jobs[i]?.status==='Expired')el.remove()})}
 async function routeV8(){const p=location.pathname;if(p.startsWith('/jobs/')){const slug=p.split('/').pop();let j=jobs.find(x=>x.slug===slug);if(!j){try{j=(await api('/api/jobs?slug='+encodeURIComponent(slug))).job}catch{}}if(j)return openJob(j,false)}if(p.startsWith('/exams/')){const slug=p.split('/').pop();const x=exams.find(e=>(e.slug||String(e.code||e.title_en).toLowerCase().replace(/[^a-z0-9]+/g,'-'))===slug);if(x)return openExam(x,false)}navigate(pathRoute[p]||'home',false)}
 onpopstate=routeV8;setTimeout(()=>{refreshPrivateOptions();renderPrivate();renderGovernment();routeV8()},600);
+const jobData = {
+  role: document.getElementById('role')?.value || 'Untitled Role',
+  source_url: document.getElementById('source_url')?.value || null,
+  salary: document.getElementById('salary')?.value || null,
+  deadline: document.getElementById('deadline')?.value || null,
+  category: document.getElementById('category')?.value || 'job',
+  role_kannada: document.getElementById('role_kannada')?.value || null,
+  // ... your other existing fields (company, location, etc.)
+};
+
+// Send to Supabase
+const { data, error } = await supabase
+  .from('jobs')
+  .insert([jobData]);
