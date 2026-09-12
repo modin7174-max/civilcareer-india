@@ -107,3 +107,23 @@ function toggleSaveJob(id, btn) {
   localStorage.setItem('cc_saved_jobs', JSON.stringify(saved));
   if (btn) btn.textContent = saved.includes(id) ? '❤️' : '🤍';
 }
+// Google Jobs Schema (JSON-LD) Generator
+function injectGoogleJobsSchema(jobList) {
+  if (!jobList || !jobList.length) return;
+
+  // Remove existing job schema to prevent duplicates
+  const oldScript = document.getElementById('google-jobs-schema');
+  if (oldScript) oldScript.remove();
+
+  // Convert active jobs to Google-compliant schema format
+  const schemas = jobList
+    .filter(j => !isClosed(j) && j.role)
+    .slice(0, 30) // Inject top 30 active listings
+    .map(j => ({
+      "@context": "https://schema.org/",
+      "@type": "JobPosting",
+      "title": j.role,
+      "description": esc(j.description || `${j.role} recruitment opportunity at ${j.company || 'Civil Career India'}. Apply before ${j.deadline || 'closing date'}.`),
+      "datePosted": j.created_at ? new Date(j.created_at).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+      "validThrough": j.deadline ? new Date(j.deadline + 'T23:59:59').toISOString() : new Date(Date.now() + 30*24*60*60*1000).toISOString(),
+      "employmentType": (j.employment_type || 'F
