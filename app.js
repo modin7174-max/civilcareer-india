@@ -66,3 +66,44 @@ function getWhatsAppShareUrl(job) {
 
   return `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
 }
+// Countdown Urgency Helper
+function getCountdownBadge(deadlineStr) {
+  if (!deadlineStr) return '';
+  const now = new Date();
+  const target = new Date(deadlineStr + 'T23:59:59');
+  const diffDays = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return `<span class="pill closed">Closed</span>`;
+  }
+  if (diffDays === 0) {
+    return `<span class="pill" style="background:#fee2e2; color:#b91c1c; font-weight:700;">🔥 Last Day Today!</span>`;
+  }
+  if (diffDays <= 3) {
+    return `<span class="pill" style="background:#fef3c7; color:#b45309; font-weight:700;">⏳ Only ${diffDays} day${diffDays > 1 ? 's' : ''} left!</span>`;
+  }
+  return `<span class="verified-date">⏳ ${diffDays} days left</span>`;
+}
+
+// Save / Bookmark Jobs in Browser
+function getSavedJobIds() {
+  try {
+    return JSON.parse(localStorage.getItem('cc_saved_jobs') || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function toggleSaveJob(id, btn) {
+  let saved = getSavedJobIds();
+  const index = saved.indexOf(id);
+  if (index > -1) {
+    saved.splice(index, 1);
+    toast('Job removed from saved list.');
+  } else {
+    saved.push(id);
+    toast('Job saved to your bookmarks!');
+  }
+  localStorage.setItem('cc_saved_jobs', JSON.stringify(saved));
+  if (btn) btn.textContent = saved.includes(id) ? '❤️' : '🤍';
+}
