@@ -215,15 +215,27 @@ async function testConnection() {
   const data = await response.json();
   console.log(data);
 }
-
 document.addEventListener('DOMContentLoaded', () => {
   loadVacancies().then(vacancies => {
-    jobs = vacancies;   // put Supabase data into your jobs array
+    jobs = vacancies;
     console.log("Jobs array updated:", jobs);
 
-    // If you already have a rendering function, call it here:
-    if (typeof renderJobs === 'function') {
-      renderJobs();
+    // Render into private jobs section
+    const privateContainer = document.getElementById('privateJobs');
+    if (privateContainer) {
+      privateContainer.innerHTML = '';
+      jobs.forEach(j => {
+        privateContainer.innerHTML += jobCard(j);
+      });
+    }
+
+    // Render into government jobs section (if needed)
+    const govtContainer = document.getElementById('governmentJobs');
+    if (govtContainer) {
+      govtContainer.innerHTML = '';
+      jobs.forEach(j => {
+        govtContainer.innerHTML += jobCard(j);
+      });
     }
   }).catch(err => {
     console.error("Error loading vacancies:", err);
