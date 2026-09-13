@@ -34,3 +34,37 @@
 /* ── WhatsApp Share Button ───────────────────────────────── */
 .btn-wa{display:inline-flex;align-items:center;gap:4px;background:#e8f5e9;color:#1b7a34;border-radius:6px;padding:5px 10px;font-size:.78rem;font-weight:600;text-decoration:none;border:1px solid #a5d6a7;transition:background .2s}
 .btn-wa:hover{background:#c8e6c9}
+
+
+/* ── Join Bar (Telegram + WhatsApp) ─────────────────────── */
+.join-bar{background:linear-gradient(90deg,#0d6e3a,#128c7e);padding:.6rem 0}
+.join-bar-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.join-text{color:#fff;font-size:.85rem;flex:1;min-width:180px}
+.join-text strong{color:#a7f3d0}
+.join-btns{display:flex;gap:.5rem;flex-shrink:0}
+.btn-telegram{background:#229ED9;color:#fff;padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s}
+.btn-telegram:hover{opacity:.85}
+.btn-whatsapp-join{background:#25D366;color:#fff;padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s}
+.btn-whatsapp-join:hover{opacity:.85}
+
+/* ── Card urgency borders ────────────────────────────────── */
+.job-card{border-left:4px solid #e4e8f0;transition:border-color .2s}
+.job-card.card-urgent{border-left-color:#e53e3e}
+.job-card.card-soon{border-left-color:#dd6b20}
+.job-card.card-fresh{border-left-color:#38a169}
+.job-card.card-closed{border-left-color:#a0aec0;opacity:.85}
+.exam-card.card-urgent{border-left-color:#e53e3e}
+.exam-card.card-soon{border-left-color:#dd6b20}
+
+/* ── NEW Badge ───────────────────────────────────────────── */
+.new-badge{display:inline-block;background:linear-gradient(90deg,#6366f1,#8b5cf6);color:#fff;font-size:.62rem;font-weight:800;padding:2px 7px;border-radius:10px;letter-spacing:.05em;text-transform:uppercase;margin-right:4px;vertical-align:middle;animation:shimmer 2s infinite}
+@keyframes shimmer{0%,100%{opacity:1}50%{opacity:.7}}
+
+/* ── Vacancy Badge ───────────────────────────────────────── */
+.vacancy-badge{display:inline-block;background:#e8eeff;color:#3730a3;border-radius:6px;font-size:.75rem;font-weight:600;padding:2px 8px;margin:.2rem .3rem 0 0;border:1px solid #c7d2fe}
+
+/* ── Education Filter Chips ──────────────────────────────── */
+.edu-chips,.org-chips{display:flex;gap:.4rem;flex-wrap:wrap;padding:.6rem 0;margin-bottom:.5rem;border-bottom:1px solid #e4e8f0}
+.edu-chips button,.org-chips button{background:#f4f6fb;border:1px solid #dde3ef;border-radius:20px;padding:4px 12px;font-size:.75rem;font-weight:600;color:#3d4966;cursor:pointer;transition:all .2s;white-space:nowrap}
+.edu-chips button.active,.org-chips button.active{background:#0b1f3a;color:#fff;border-color:#0b1f3a}
+.edu-chips button:hover:not(.active),.org-chips button:hover:not(.active){background:#e4e8f0}
