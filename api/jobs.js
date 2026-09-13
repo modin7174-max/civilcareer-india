@@ -269,7 +269,7 @@ async function checkDuplicate(body, excludeId = null) {
   return null;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     /*
      * ----------------------------------------------------------
