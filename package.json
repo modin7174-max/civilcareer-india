@@ -1,0 +1,13 @@
+{
+  "name": "civilcareer-india",
+  "version": "1.0.0",
+  "description": "Civil Engineering Careers & Karnataka Government Jobs",
+  "scripts": {
+    "install": "echo 'Dependencies installed'",
+    "test": "echo 'No tests configured'"
+  },
+  "dependencies": {
+    "@vercel/speed-insights": "^1.0.0"
+  },
+  "private": true
+}
