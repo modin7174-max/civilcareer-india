@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Initialize Supabase client with environment variables
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
@@ -7,36 +8,28 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    // Take data from the form
-    const { email, phone, preference } = req.body;
+    try {
+      // Take data from the form request body
+      const { email, phone, preference } = req.body;
 
-    // Insert into your Supabase table "subscribers"
-    const { data, error } = await supabase
-      .from('subscribers')
-      .insert([{ email, phone, preference }]);
+      // Insert into your Supabase table "subscribers"
+      const { data, error } = await supabase
+        .from('subscribers')
+        .insert([{ email, phone, preference }]);
 
-    // If there’s an error, return 500
-    if (error) {
-      return res.status(500).json({ error: error.message });
+      // Handle errors
+      if (error) {
+        return res.status(500).json({ error: error.message });
+      }
+
+      // Success response
+      return res.status(200).json({ data });
+    } catch (err) {
+      // Catch unexpected errors
+      return res.status(500).json({ error: err.message });
     }
-
-    // If success, return 200 with the new data
-    return res.status(200).json({ data });
   } else {
-    // If someone tries GET or PUT, block it
+    // Block other request types
     res.status(405).json({ error: 'Method not allowed' });
   }
 }
-
-function send(r,s,b){r.status(s).json(b)}
-function cfg(){const u=process.env.SUPABASE_URL,k=process.env.SUPABASE_SERVICE_ROLE_KEY;if(!u||!k)throw Error('Database is not configured.');return{u,k}}
-async function db(p,o={}){const{u,k}=cfg(),r=await fetch(`${u}/rest/v1/${p}`,{...o,headers:{apikey:k,authorization:`Bearer ${k}`,'content-type':'application/json',prefer:'return=representation',...(o.headers||{})}}),t=await r.text();if(!r.ok)throw Error(t||`Database error ${r.status}`);return t?JSON.parse(t):[]}
-const fields=['source_url','role','company','location','description','responsibilities','skills','employment_type','employment_types','salary','salary_min','salary_max','salary_currency','sector','discipline','experience_level','experience_min','experience_max','experience_ranges','work_mode','deadline','qualification','qualifications','qualification_notes','posted_date','application_method','contact_info','application_email','application_emails','application_email_private','application_url','company_url','country','state','district','city','location_display','locations','role_normalized','posted_at','published_at','expires_at','verification_status','last_verified_at','featured','last_verified','status','vacancy_count','age_limit','application_fee','application_start','recruitment_authority','slug','published','confirm_duplicate'];
-const arrays=new Set(['locations','qualifications','experience_ranges','employment_types','application_emails']);
-function own(q){return process.env.OWNER_KEY&&q.headers['x-owner-key']===process.env.OWNER_KEY}
-function slug(v){return String(v||'job').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,80)||'job'}
-function pick(x){const y={};for(const k of fields)if(k!=='confirm_duplicate'&&x[k]!==undefined){let v=x[k];if(arrays.has(k)&&typeof v==='string'){try{v=JSON.parse(v)}catch{v=v.split(',').map(a=>a.trim()).filter(Boolean)}}y[k]=v===''?null:v}return y}
-function addDays(iso,days){const d=new Date(iso);d.setUTCDate(d.getUTCDate()+days);return d.toISOString()}
-async function expire(){const now=encodeURIComponent(new Date().toISOString());await db(`jobs?published=eq.true&expires_at=lt.${now}`,{method:'PATCH',body:JSON.stringify({status:'Expired',published:false})}).catch(()=>[])}
-async function duplicates(x){const ors=[];if(x.source_url)ors.push(`source_url.eq.${encodeURIComponent(x.source_url)}`);if(x.application_email)ors.push(`application_email.eq.${encodeURIComponent(x.application_email)}`);if(x.role&&x.company)ors.push(`and(role.ilike.${encodeURIComponent(x.role)},company.ilike.${encodeURIComponent(x.company)})`);if(!ors.length)return[];return db(`jobs?select=id,role,company,location_display,status,source_url&status=eq.Active&or=(${ors.join(',')})&limit=5`).catch(()=>[])}
-module.exports=async(q,r)=>{try{await expire();if(q.method==='GET'){const exact=String(q.query?.slug||'').trim();if(exact){const rows=await db(`jobs?select=*&slug=eq.${encodeURIComponent(exact)}&limit=1`);return send(r,200,{job:rows[0]||null})}if(own(q))return send(r,200,{jobs:await db('jobs?select=*&order=published_at.desc.nullslast,created_at.desc')});const now=encodeURIComponent(new Date().toISOString());return send(r,200,{jobs:await db(`jobs?select=*&published=eq.true&status=eq.Active&or=(expires_at.is.null,expires_at.gt.${now})&order=featured.desc,published_at.desc.nullslast,created_at.desc`)} )}if(!own(q))return send(r,401,{error:'Incorrect owner key.'});if(q.method==='POST'){const input=q.body||{},x=pick(input);if(!x.source_url||!x.role)return send(r,400,{error:'Job title and original source URL are required.'});const dupe=await duplicates(x);if(dupe.length&&!input.confirm_duplicate)return send(r,409,{error:'A similar active job already exists. Review before publishing.',duplicate:true,matches:dupe});const now=new Date().toISOString();x.published=x.published!==false;x.status=x.published?'Active':'Draft';x.posted_at=now;x.published_at=x.published?now:null;x.verification_status=x.verification_status||'Verified';x.last_verified_at=x.last_verified_at||now;x.last_verified=x.last_verified||now.slice(0,10);x.role_normalized=x.role_normalized||x.role;x.location_display=x.location_display||x.location||[x.city,x.state,x.country].filter(Boolean).join(', ');x.location=x.location_display;x.qualifications=x.qualifications||[];x.experience_ranges=x.experience_ranges||[];x.employment_types=x.employment_types||[x.employment_type].filter(Boolean);x.locations=x.locations||[x.location_display].filter(Boolean);x.slug=`${slug(x.role)}-${slug(x.city||x.location_display)}-${slug(x.company)}-${Date.now().toString(36)}`;if(['Government','Public Sector'].includes(x.sector)&&x.deadline)x.expires_at=new Date(`${x.deadline}T23:59:59Z`).toISOString();else x.expires_at=addDays(now,30);const a=await db('jobs',{method:'POST',body:JSON.stringify(x)});return send(r,201,{job:a[0],duplicate_warning:dupe.length>0})}if(q.method==='PATCH'){const input=q.body||{},id=String(input.id||'');if(!id)return send(r,400,{error:'Job ID required.'});const x=pick(input);x.updated_at=new Date().toISOString();if(input.repost===true){const now=new Date().toISOString();x.published_at=now;x.posted_at=now;x.expires_at=addDays(now,30);x.status='Active';x.published=true}const a=await db(`jobs?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify(x)});return send(r,200,{job:a[0]})}if(q.method==='DELETE'){await db(`jobs?id=eq.${encodeURIComponent(q.body?.id||'')}`,{method:'DELETE'});return send(r,200,{deleted:true})}return send(r,405,{error:'Method not allowed.'})}catch(e){send(r,500,{error:e.message})}};
