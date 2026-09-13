@@ -379,7 +379,21 @@ module.exports = async function handler(req, res) {
       delete body.key;
 
       const job = pick(body);
-
+// Convert empty optional date values to null
+for (const field of [
+  'application_start',
+  'deadline',
+  'posted_at',
+  'published_at',
+  'expires_at',
+  'last_verified',
+  'last_verified_at',
+  'updated_at'
+]) {
+  if (job[field] === '') {
+    job[field] = null;
+  }
+}
       /*
        * URL is intentionally OPTIONAL.
        * Role is the minimum useful identification.
