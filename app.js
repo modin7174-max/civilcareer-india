@@ -1,4 +1,3 @@
-
 /* ═══════════════════════════════════════════════
    ROLE-BASED CATEGORISATION SYSTEM
 ═══════════════════════════════════════════════ */
@@ -37,8 +36,8 @@ function date(v){if(!v)return'Check official notification';const d=new Date(v+'T
 function jobCard(j,gov=false){
   const closed=isClosed(j),verified=j.last_verified&&!closed,saved=getSaved().has(j.id);
   const isNew=j.created_at&&(new Date()-new Date(j.created_at))<3*86400000;
-  const urgClass=closed?'card-closed':daysLeft!==null&&daysLeft<=3?'card-urgent':daysLeft!==null&&daysLeft<=7?'card-soon':'card-fresh';
   const daysLeft=j.deadline&&!closed?Math.ceil((new Date(j.deadline+'T23:59:59')-new Date())/86400000):null;
+  const urgClass=closed?'card-closed':daysLeft!==null&&daysLeft<=3?'card-urgent':daysLeft!==null&&daysLeft<=7?'card-soon':'card-fresh';
   const waText=encodeURIComponent((j.role||'Job')+' at '+(j.company||'Organization')+'\n'+(j.location?j.location+'\n':'')+(j.source_url?'Apply: '+j.source_url:''));
   return `<article class="job-card ${urgClass}">
     <div class="card-top">
@@ -81,7 +80,6 @@ function bindCards(){
   });
 }function empty(title,text){return `<div class="empty-state"><h3>${esc(title)}</h3><p>${esc(text)}</p></div>`}
 function renderHome(){const p=jobs.filter(j=>(j.sector||'Private')==='Private').slice(0,3),g=jobs.filter(j=>['Government','Public Sector'].includes(j.sector)).slice(0,3);$('homePrivate').innerHTML=p.length?p.map(x=>jobCard(x)).join(''):empty('Opportunities are being added','Verified civil engineering jobs will appear here as they are published.');$('homeGovernment').innerHTML=g.length?g.map(x=>jobCard(x,true)).join(''):empty('Recruitment updates are being added','Karnataka government opportunities will appear here after verification.');const close=jobs.filter(j=>j.deadline&&!isClosed(j)).sort((a,b)=>a.deadline.localeCompare(b.deadline)).slice(0,4);$('closingSoon').innerHTML=close.length?close.map(j=>`<div class="compact-item"><div><b>${esc(j.role)}</b><span>${esc(j.company||j.location||'Opportunity')}</span></div><span>${date(j.deadline)}</span></div>`).join(''):'<div class="compact-item"><span>No active deadlines published.</span></div>';$('homeExams').innerHTML=exams.slice(0,4).map(x=>`<div class="compact-item"><div><b>${esc(x.code)} — ${esc(x.title_en)}</b><span>${esc(x.authority||'Examination update')}</span></div><span>${x.application_end?date(x.application_end):'Official dates'}</span></div>`).join('')||'<div class="compact-item"><span>Exam updates are being added.</span></div>';$('homeMaterials').innerHTML=materials.slice(0,3).map(materialCard).join('')||empty('Resources are being added','Free civil engineering and Karnataka competitive-exam materials will appear here as they are published.');bindCards();translate();renderUrgencyStrip();}
-
 function renderUrgencyStrip(){
   const strip=$('urgencyStrip'),el=$('urgencyJobs');
   if(!strip||!el)return;
@@ -100,7 +98,6 @@ function renderPrivate(){
   const qual=($('privateQualification')&&$('privateQualification').value||'').toLowerCase();
   const timePeriod=$('privateSort')&&$('privateSort').value||'';
   const now=new Date();
-
   // Time filter
   if(['24h','3d','7d','14d','30d','week','month'].includes(timePeriod)){
     const days={'24h':1,'3d':3,'7d':7,'14d':14,'30d':30,'week':7,'month':30};
@@ -114,14 +111,11 @@ function renderPrivate(){
   } else {
     a.sort((x,y)=>String(y.created_at).localeCompare(String(x.created_at)));
   }
-
   a=a.filter(j=>!role||String(j.role).toLowerCase().includes(role))
      .filter(j=>!loc||String(j.location).toLowerCase().includes(loc))
      .filter(j=>!exp||String(j.experience_level).toLowerCase()===exp)
      .filter(j=>!qual||String(j.qualification).toLowerCase().includes(qual));
-
   if($('privateType')&&$('privateType').value)a=a.filter(j=>j.employment_type===$('privateType').value);
-
   // Category view
   if(!activePrivateCategory){
     // Show category tiles
@@ -138,18 +132,14 @@ function renderPrivate(){
     bindCards();
     return;
   }
-
   // Filter by selected category
   const head=ROLE_HEADS.find(h=>h.id===activePrivateCategory)||ROLE_HEADS.at(-1);
   a=a.filter(j=>classifyJob(j)===activePrivateCategory);
-
   $('privateCount').textContent=`${a.length} ${head.label} job${a.length===1?'':'s'}`;
-
   const backBtn=`<button class="category-back" onclick="activePrivateCategory='';renderPrivate()">← All Categories</button>`;
   $('privateJobs').innerHTML=backBtn+(a.length?a.map(x=>jobCard(x)).join(''):empty('No jobs in this category','Check back soon or browse another category.'));
   bindCards();
 }
-
 function renderGovernment(){
   let a=jobs.filter(j=>['Government','Public Sector'].includes(j.sector));
   const dep=($('govDepartment')&&$('govDepartment').value||'').toLowerCase();
@@ -158,23 +148,18 @@ function renderGovernment(){
   const dist=($('govDistrict')&&$('govDistrict').value||'').toLowerCase();
   const edu=($('govEdu')&&$('govEdu').value||'').toLowerCase();
   const org=($('govOrgChips')&&$('govOrgChips').querySelector('.active:not([data-org=""])')||{dataset:{org:''}}).dataset.org||'';
-
   a=a.filter(j=>!dep||[j.company,j.discipline,j.description].join(' ').toLowerCase().includes(dep))
      .filter(j=>!loc||String(j.location).toLowerCase().includes(loc))
      .filter(j=>!dist||String(j.location).toLowerCase().includes(dist))
      .filter(j=>!qual||String(j.qualification).toLowerCase().includes(qual))
      .filter(j=>!edu||String(j.qualification).toLowerCase().includes(edu))
      .filter(j=>!org||[j.company,j.recruitment_authority,j.description].join(' ').toLowerCase().includes(org));
-
   if($('govStatus')&&$('govStatus').value)a=a.filter(j=>$('govStatus').value==='closed'?isClosed(j):!isClosed(j));
   a.sort($('govSort')&&$('govSort').value==='deadline'?(x,y)=>(x.deadline||'9999').localeCompare(y.deadline||'9999'):(x,y)=>String(y.created_at).localeCompare(String(x.created_at)));
-
   $('governmentCount').textContent=`${a.length} Karnataka government opportunit${a.length===1?'y':'ies'}`;
-
   // Group by recruitment authority
   const groups={};
   a.forEach(j=>{const auth=j.recruitment_authority||j.company||'Other';if(!groups[auth])groups[auth]=[];groups[auth].push(j)});
-
   if(Object.keys(groups).length===0){
     $('governmentJobs').innerHTML=empty('No matching government recruitment','Verified Karnataka government opportunities will appear here as they are published.');
   } else if(Object.keys(groups).length===1||dist||dep||edu||org||loc||qual){
@@ -191,7 +176,6 @@ function renderGovernment(){
   }
   bindCards();
 }
-
 function renderExams(code=''){const a=exams.filter(x=>!code||x.code.toUpperCase().includes(code));$('examCards').innerHTML=a.length?a.map(examCard).join(''):empty('Exam updates are being added','Karnataka government examination details will appear here after source verification.');bindCards()}
 function renderMaterials(cat=''){const a=materials.filter(m=>!cat||String(m.category).includes(cat)||String(m.exam_code).includes(cat));$('materialCards').innerHTML=a.length?a.map(materialCard).join(''):empty('Resources are being added','Free civil engineering and Karnataka competitive-exam materials will appear here as they are published.');bindCards()}
 function openJob(j){if(!j)return;const gov=['Government','Public Sector'].includes(j.sector),closed=isClosed(j);$('detailTitle').textContent=j.role;$('detailBody').innerHTML=`<div class="detail-grid"><div class="detail"><b>${gov?'Organization':'Company'}</b>${esc(j.company||'Check original source')}</div><div class="detail"><b>Location</b>${esc(j.location||'Check original source')}</div><div class="detail"><b>Qualification</b>${esc(j.qualification||'Check official notification for the latest details.')}</div><div class="detail"><b>Experience</b>${esc(j.experience_level||'Not specified')}</div><div class="detail"><b>Employment type</b>${esc(j.employment_type||'Not specified')}</div><div class="detail"><b>${gov?'Pay scale':'Salary'}</b>${esc(j.salary||'Not provided')}</div>${gov?`<div class="detail"><b>Vacancies</b>${esc(j.vacancy_count||'Check official notification')}</div><div class="detail"><b>Age limit</b>${esc(j.age_limit||'Check official notification')}</div><div class="detail"><b>Application fee</b>${esc(j.application_fee||'Check official notification')}</div><div class="detail"><b>Application starts</b>${date(j.application_start)}</div>`:''}<div class="detail"><b>Application deadline</b>${j.deadline?date(j.deadline):'Check original source'}</div><div class="detail"><b>Status</b>${closed?'Application Closed':j.status||'Active'}</div><div class="detail full"><b>Description</b>${esc(j.description||'Check the original source for complete details.')}</div><div class="detail full"><b>Application method</b>${esc(j.application_method||'Use the original source')}</div></div><div class="card-actions">${j.source_url?`<a href="${esc(j.source_url)}" target="_blank" rel="noopener">${gov?'View Official Notification':'View Original Job'} ↗</a>`:''}${j.last_verified?`<span class="verified-date">Last verified: ${date(j.last_verified)}</span>`:''}</div>`;navigate('examDetail');}
@@ -229,11 +213,14 @@ async function loadAdmin(){
       api('/api/resource-submissions',{key:adminKey}),
       api('/api/reports',{key:adminKey})
     ]);
-
     // Jobs — always try to load these
     const jobsData = j.status==='fulfilled'?j.value:{};
-    if(jobsData.jobs) jobs=jobsData.jobs;
-
+    if(j.status==='rejected'){
+      const box=$('adminJobs');
+      if(box)box.innerHTML=empty('Could not load jobs',j.reason?.message||'The Jobs API request failed. Check the owner key and deployment.');
+    }else if(Array.isArray(jobsData.jobs)){
+      jobs=jobsData.jobs;
+    }
     // Analytics — optional, don't crash if missing
     const an=(a.status==='fulfilled'?a.value.analytics:null)||{};
     if($('metrics'))$('metrics').innerHTML=[
@@ -245,13 +232,11 @@ async function loadAdmin(){
       ['Open reports',(re.status==='fulfilled'?(re.value.reports||[]):[]).filter(x=>x.status==='Open').length]
     ].map(x=>`<div class="metric"><span>${x[0]}</span><b>${Number(x[1]||0).toLocaleString('en-IN')}</b></div>`).join('');
     if(typeof renderAnalytics==='function')renderAnalytics(an);
-
     // Submissions and reports — optional
     const empSubs  = es.status==='fulfilled'?es.value.submissions||[]:[];
     const resSubs  = rs.status==='fulfilled'?rs.value.submissions||[]:[];
     const reports  = re.status==='fulfilled'?re.value.reports||[]:[];
     renderAdminLists(empSubs,resSubs,reports);
-
   }catch(err){
     if($('adminLoginStatus')){
       $('adminLoginStatus').className='form-status show error';
@@ -359,8 +344,10 @@ if($('govOrgChips')){$$('#govOrgChips button').forEach(b=>b.onclick=()=>{$$('#go
 if($('govEduChips')){$$('#govEduChips button').forEach(b=>b.onclick=()=>{$$('#govEduChips button').forEach(x=>x.classList.toggle('active',x===b));if($('govEdu'))$('govEdu').value=b.dataset.edu;renderGovernment()});}
 // Edu chips for private jobs
 if($('privEduChips')){$$('#privEduChips button').forEach(b=>b.onclick=()=>{$$('#privEduChips button').forEach(x=>x.classList.toggle('active',x===b));renderPrivate()});}$$('#examChips button').forEach(b=>b.onclick=()=>{$$('#examChips button').forEach(x=>x.classList.toggle('active',x===b));renderExams(b.dataset.code)});$$('.material-tabs button').forEach(b=>b.onclick=()=>{$$('.material-tabs button').forEach(x=>x.classList.toggle('active',x===b));renderMaterials(b.dataset.material)});
-wireForm('employerForm','/api/employer-submissions');wireForm('resourceForm','/api/resource-submissions',d=>({...d,permission_confirmed:document.querySelector('#resourceForm [name="permission_confirmed"]').checked}));wireForm('reportForm','/api/reports');$('adminLogin').onclick=async()=>{adminKey=$('adminKey').value;sessionStorage.setItem('cc_admin',adminKey);await showAdmin()};$('adminLogout').onclick=()=>{sessionStorage.removeItem('cc_admin');adminKey='';showAdmin()};$$('#adminTabs button').forEach(b=>b.onclick=()=>{$$('#adminTabs button').forEach(x=>x.classList.toggle('active',x===b));$$('[data-admin-panel]').forEach(x=>x.classList.toggle('active',x.dataset.adminPanel===b.dataset.admin))});$('addJob').onclick=()=>jobEditor();$('addExam').onclick=()=>examEditor();$('addMaterial').onclick=()=>materialEditor();$('importJobBtn').onclick=importJobLink;$('importJobUrl').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();importJobLink()}};$('importExamBtn').onclick=importExamPdf;$('clearJobImport').onclick=()=>{$('importJobUrl').value='';$('importJobText').value='';$('importJobStatus').className='form-status';$('importJobStatus').textContent=''};
-translate();navigate(pathRoute[location.pathname]||'home',false);loadData();
+wireForm('employerForm','/api/employer-submissions');wireForm('resourceForm','/api/resource-submissions',d=>({...d,permission_confirmed:document.querySelector('#resourceForm [name="permission_confirmed"]').checked}));wireForm('reportForm','/api/reports');$('adminLogin').onclick=async()=>{adminKey=$('adminKey').value;sessionStorage.setItem('cc_admin',adminKey);await showAdmin()};$('adminLogout').onclick=()=>{sessionStorage.removeItem('cc_admin');adminKey='';showAdmin()};$$('#adminTabs button').forEach(b=>b.onclick=async()=>{$$('#adminTabs button').forEach(x=>x.classList.toggle('active',x===b));$$('[data-admin-panel]').forEach(x=>x.classList.toggle('active',x.dataset.adminPanel===b.dataset.admin));if(b.dataset.admin==='jobs'&&adminKey)await loadAdmin()});$('addJob').onclick=()=>jobEditor();$('addExam').onclick=()=>examEditor();$('addMaterial').onclick=()=>materialEditor();$('importJobBtn').onclick=importJobLink;$('importJobUrl').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();importJobLink()}};$('importExamBtn').onclick=importExamPdf;$('clearJobImport').onclick=()=>{$('importJobUrl').value='';$('importJobText').value='';$('importJobStatus').className='form-status';$('importJobStatus').textContent=''};
+translate();
+navigate(pathRoute[location.pathname]||'home',false);
+loadData().then(()=>{if(route==='admin'&&adminKey)loadAdmin()});
 // Wire featured org tiles
 $$('.org-tile[data-route]').forEach(a=>a.onclick=e=>{e.preventDefault();navigate(a.dataset.route)});
 if ("serviceWorker" in navigator) {
