@@ -3,26 +3,32 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { email, phone, preference } = req.body
+  try {
+    const { email, phone, preference } = req.body
 
-  const response = await fetch(
-    `${process.env.SUPABASE_URL}/rest/v1/subscribers`,
-    {
+    const url = process.env.SUPABASE_URL + '/rest/v1/subscribers'
+    const key = process.env.SUPABASE_ANON_KEY
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': process.env.SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+        'apikey': key,
+        'Authorization': 'Bearer ' + key,
         'Prefer': 'return=minimal'
       },
       body: JSON.stringify({ email, phone, preference })
+    })
+
+    const text = await response.text()
+    
+    if (!response.ok) {
+      return res.status(500).json({ error: text })
     }
-  )
 
-  if (!response.ok) {
-    const err = await response.text()
-    return res.status(500).json({ error: err })
+    return res.status(200).json({ success: true })
+
+  } catch (e) {
+    return res.status(500).json({ error: e.message })
   }
-
-  return res.status(200).json({ success: true })
 }
