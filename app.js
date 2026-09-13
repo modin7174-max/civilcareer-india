@@ -188,4 +188,19 @@ if ("serviceWorker" in navigator) {
       .then(() => console.log("SW registered"))
       .catch((err) => console.error("SW error:", err));
   });
+  const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+async function testConnection() {
+  const response = await fetch(`${supabaseUrl}/rest/v1/subscribers`, {
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`
+    }
+  });
+  const data = await response.json();
+  console.log(data);
 }
+
+testConnection();
+
