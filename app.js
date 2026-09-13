@@ -216,5 +216,18 @@ async function testConnection() {
   console.log(data);
 }
 
-testConnection();
+document.addEventListener('DOMContentLoaded', () => {
+  loadVacancies().then(vacancies => {
+    jobs = vacancies;   // put Supabase data into your jobs array
+    console.log("Jobs array updated:", jobs);
+
+    // If you already have a rendering function, call it here:
+    if (typeof renderJobs === 'function') {
+      renderJobs();
+    }
+  }).catch(err => {
+    console.error("Error loading vacancies:", err);
+  });
+});
+
 
