@@ -226,14 +226,12 @@ async function loadAdmin(){
       ['Page views',an.total_page_views],
       ['Open reports',(re.status==='fulfilled'?(re.value.reports||[]):[]).filter(x=>x.status==='Open').length]
     ].map(x=>`<div class="metric"><span>${x[0]}</span><b>${Number(x[1]||0).toLocaleString('en-IN')}</b></div>`).join('');
-    // Render the Admin Jobs list independently of optional dashboard APIs.
-  const empSubs = es.status==='fulfilled'?es.value.submissions||[]:[];
-  const resSubs = rs.status==='fulfilled'?rs.value.submissions||[]:[];
-  const reports = re.status==='fulfilled'?re.value.reports||[]:[];
-  renderAdminLists(empSubs,resSubs,reports);
-  if(typeof renderAnalytics==='function' && $('analyticsPanel')){
-    try{renderAnalytics(an)}catch(e){console.warn('Analytics unavailable:',e)}
-  }
+    if(typeof renderAnalytics==='function')renderAnalytics(an);
+    // Submissions and reports — optional
+    const empSubs  = es.status==='fulfilled'?es.value.submissions||[]:[];
+    const resSubs  = rs.status==='fulfilled'?rs.value.submissions||[]:[];
+    const reports  = re.status==='fulfilled'?re.value.reports||[]:[];
+    renderAdminLists(empSubs,resSubs,reports);
   }catch(err){
     if($('adminLoginStatus')){
       $('adminLoginStatus').className='form-status show error';
@@ -341,8 +339,44 @@ if($('govOrgChips')){$$('#govOrgChips button').forEach(b=>b.onclick=()=>{$$('#go
 if($('govEduChips')){$$('#govEduChips button').forEach(b=>b.onclick=()=>{$$('#govEduChips button').forEach(x=>x.classList.toggle('active',x===b));if($('govEdu'))$('govEdu').value=b.dataset.edu;renderGovernment()});}
 // Edu chips for private jobs
 if($('privEduChips')){$$('#privEduChips button').forEach(b=>b.onclick=()=>{$$('#privEduChips button').forEach(x=>x.classList.toggle('active',x===b));renderPrivate()});}$$('#examChips button').forEach(b=>b.onclick=()=>{$$('#examChips button').forEach(x=>x.classList.toggle('active',x===b));renderExams(b.dataset.code)});$$('.material-tabs button').forEach(b=>b.onclick=()=>{$$('.material-tabs button').forEach(x=>x.classList.toggle('active',x===b));renderMaterials(b.dataset.material)});
-wireForm('employerForm','/api/employer-submissions');wireForm('resourceForm','/api/resource-submissions',d=>({...d,permission_confirmed:document.querySelector('#resourceForm [name="permission_confirmed"]').checked}));wireForm('reportForm','/api/reports');$('adminLogin').onclick=async()=>{adminKey=$('adminKey').value;sessionStorage.setItem('cc_admin',adminKey);await showAdmin()};$('adminLogout').onclick=()=>{sessionStorage.removeItem('cc_admin');adminKey='';showAdmin()};$$('#adminTabs button').forEach(b=>b.onclick=async()=>{$$('#adminTabs button').forEach(x=>x.classList.toggle('active',x===b));$$('[data-admin-panel]').forEach(x=>x.classList.toggle('active',x.dataset.adminPanel===b.dataset.admin));if(b.dataset.admin==='jobs'&&adminKey)await loadAdmin()});$('addJob').onclick=()=>jobEditor();$('addExam').onclick=()=>examEditor();$('addMaterial').onclick=()=>materialEditor();$('importJobBtn').onclick=importJobLink;$('importJobUrl').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();importJobLink()}};$('importExamBtn').onclick=importExamPdf;$('clearJobImport').onclick=()=>{$('importJobUrl').value='';$('importJobText').value='';$('importJobStatus').className='form-status';$('importJobStatus').textContent=''};
-translate();navigate(pathRoute[location.pathname]||'home',false);loadData().then(()=>{if(route==='admin'&&adminKey)loadAdmin()});
+function ensureAdminJobsUI(){
+  const dashboard=$('adminDashboard');
+  const tabs=$('adminTabs');
+  if(!dashboard||!tabs)return;
+  let jobsTab=tabs.querySelector('button[data-admin="jobs"]');
+  if(!jobsTab){
+    jobsTab=document.createElement('button');
+    jobsTab.type='button';
+    jobsTab.dataset.admin='jobs';
+    jobsTab.textContent='Jobs';
+    tabs.appendChild(jobsTab);
+  }
+  let jobsPanel=dashboard.querySelector('[data-admin-panel="jobs"]');
+  if(!jobsPanel){
+    jobsPanel=document.createElement('section');
+    jobsPanel.className='admin-panel';
+    jobsPanel.dataset.adminPanel='jobs';
+    jobsPanel.innerHTML='<div class="admin-actions"><button class="btn secondary" id="addJob" type="button">Add manually</button><label class="check"><input type="checkbox" id="showExpiredAdmin" checked> Show expired jobs</label></div><div id="adminJobs"></div>';
+    dashboard.appendChild(jobsPanel);
+  }
+  if(!$('adminJobs')){
+    const box=document.createElement('div');
+    box.id='adminJobs';
+    jobsPanel.appendChild(box);
+  }
+}
+function bindAdminTabs(){
+  const tabs=$('#adminTabs');
+  if(!tabs)return;
+  $$('#adminTabs button').forEach(b=>b.onclick=async()=>{
+    $$('#adminTabs button').forEach(x=>x.classList.toggle('active',x===b));
+    $$('[data-admin-panel]').forEach(x=>x.classList.toggle('active',x.dataset.adminPanel===b.dataset.admin));
+    if(b.dataset.admin==='jobs'&&adminKey)await loadAdmin();
+  });
+}
+ensureAdminJobsUI();
+wireForm('employerForm','/api/employer-submissions');wireForm('resourceForm','/api/resource-submissions',d=>({...d,permission_confirmed:document.querySelector('#resourceForm [name="permission_confirmed"]').checked}));wireForm('reportForm','/api/reports');$('adminLogin').onclick=async()=>{adminKey=$('adminKey').value;sessionStorage.setItem('cc_admin',adminKey);await showAdmin()};$('adminLogout').onclick=()=>{sessionStorage.removeItem('cc_admin');adminKey='';showAdmin()};bindAdminTabs();$('addJob').onclick=()=>jobEditor();$('addExam').onclick=()=>examEditor();$('addMaterial').onclick=()=>materialEditor();$('importJobBtn').onclick=importJobLink;$('importJobUrl').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();importJobLink()}};$('importExamBtn').onclick=importExamPdf;$('clearJobImport').onclick=()=>{$('importJobUrl').value='';$('importJobText').value='';$('importJobStatus').className='form-status';$('importJobStatus').textContent=''};
+translate();navigate(pathRoute[location.pathname]||'home',false);loadData();
 // Wire featured org tiles
 $$('.org-tile[data-route]').forEach(a=>a.onclick=e=>{e.preventDefault();navigate(a.dataset.route)});
 if ("serviceWorker" in navigator) {
