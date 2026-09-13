@@ -628,4 +628,13 @@ module.exports = async function handler(req, res) {
     );
 
   } catch (err) {
-    console
+    console.error('Jobs API error:', err);
+
+    return responseError(
+      res,
+      500,
+      'Internal server error',
+      err.message
+    );
+  }
+}
