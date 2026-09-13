@@ -9,3 +9,28 @@
 .exam-detail-page{max-width:900px}.exam-detail-status{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:18px;color:var(--muted);font-size:13px}.exam-intro{font-size:17px;line-height:1.75;color:var(--text);padding:18px;background:#f5f8fb;border-left:3px solid var(--teal)}.exam-detail-section{padding:24px 0;border-bottom:1px solid var(--line)}.exam-detail-section h3{font-size:21px;margin:0 0 15px}.exam-detail-copy{white-space:normal;line-height:1.75;color:var(--text)}.exam-overview{display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--line)}.exam-overview>div{padding:14px 16px;border-bottom:1px solid var(--line)}.exam-overview>div:nth-child(odd){border-right:1px solid var(--line)}.exam-overview b{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}.official-links .card-actions{margin-top:0}.panel-form textarea[name="vacancy_breakdown"],.panel-form textarea[name="how_to_apply"],.panel-form textarea[name="other_information"]{min-height:180px}@media(max-width:650px){.exam-overview{grid-template-columns:1fr}.exam-overview>div:nth-child(odd){border-right:0}.exam-detail-status{align-items:flex-start;flex-direction:column}}
 
 .mobile-filter-btn{display:none;margin:0 0 14px}.filter-title{display:flex;justify-content:space-between;align-items:center}.filter-title button{display:none}.active-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.active-filters button{border:1px solid var(--line);background:#eef5fb;color:var(--navy);border-radius:999px;padding:7px 11px}.dedicated-detail{max-width:980px;padding-top:52px;padding-bottom:80px}.back-link{border:0;background:none;color:var(--blue);font-weight:700;margin-bottom:22px}.dedicated-card{background:#fff;border:1px solid var(--line);padding:clamp(22px,5vw,50px);box-shadow:var(--shadow)}.dedicated-card h1{font-size:clamp(34px,5vw,58px);margin:8px 0}.detail-kicker{color:var(--teal);font-weight:800;text-transform:uppercase;font-size:12px;letter-spacing:.08em}.detail-lead{font-size:20px;color:var(--muted)}.expired-banner{background:#fff0ed;color:#a63b32;padding:15px;margin:20px 0;border-left:3px solid #cf4b40}.email-apply{margin:24px 0;padding:20px;background:#edf7f4;border:1px solid #b8ded4;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.email-apply b{width:100%}.email-apply span{font-family:monospace}.email-apply button,.email-apply a{border:1px solid var(--teal);background:#fff;color:var(--teal);padding:9px 12px;text-decoration:none}.email-detection{margin-top:15px;padding:15px;background:#fff;border:1px solid var(--line)}.email-detection .btn{margin-top:8px}.panel-form select[multiple]{min-height:130px}.admin-actions{display:flex;gap:18px;align-items:center;justify-content:space-between}@media(max-width:760px){.mobile-filter-btn{display:inline-flex}.filters{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:100;background:#fff;max-height:82vh;overflow:auto;transform:translateY(105%);transition:.2s;padding:22px;border-radius:18px 18px 0 0;box-shadow:0 -10px 35px #0b1f3a33}.filters.drawer-open{transform:translateY(0)}.filter-title button{display:block;border:0;background:none;font-size:26px}.dedicated-detail{padding-top:25px}.dedicated-card{padding:22px}.email-apply{align-items:stretch;flex-direction:column}.admin-actions{align-items:flex-start;flex-direction:column}}
+
+
+/* ── Stats Bar ───────────────────────────────────────────── */
+.stats-bar{background:#0b1f3a;border-bottom:1px solid rgba(255,255,255,0.08);padding:.75rem 0}
+.stats-grid{display:flex;gap:0;justify-content:space-around;flex-wrap:wrap}
+.stat-item{text-align:center;padding:.5rem 1rem;flex:1;min-width:80px}
+.stat-num{display:block;font-size:1.6rem;font-weight:800;color:#c9973c;line-height:1.1}
+.stat-label{display:block;font-size:.7rem;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+
+/* ── Countdown Badge ─────────────────────────────────────── */
+.countdown-badge{display:inline-block;background:#fef3cd;color:#856404;border-radius:12px;font-size:.7rem;font-weight:700;padding:2px 8px;margin-left:6px;vertical-align:middle}
+.countdown-badge.urgent{background:#fde8e8;color:#c0392b;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* ── Salary Badge ────────────────────────────────────────── */
+.salary-badge{display:inline-block;background:#e8f5ee;color:#1a7f4b;border-radius:6px;font-size:.75rem;font-weight:600;padding:3px 10px;margin:.35rem 0;border:1px solid #a7f3d0}
+
+/* ── Save/Bookmark Button ────────────────────────────────── */
+.btn-save{background:none;border:1px solid #dde3ef;border-radius:6px;font-size:1rem;cursor:pointer;padding:4px 10px;color:#9aa5b8;transition:all .2s;line-height:1}
+.btn-save:hover{border-color:#c9973c;color:#c9973c}
+.btn-save.saved{background:#fff8ec;border-color:#c9973c;color:#c9973c}
+
+/* ── WhatsApp Share Button ───────────────────────────────── */
+.btn-wa{display:inline-flex;align-items:center;gap:4px;background:#e8f5e9;color:#1b7a34;border-radius:6px;padding:5px 10px;font-size:.78rem;font-weight:600;text-decoration:none;border:1px solid #a5d6a7;transition:background .2s}
+.btn-wa:hover{background:#c8e6c9}
