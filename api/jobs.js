@@ -1,3 +1,33 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
+export default async function handler(req, res) {
+  if (req.method === 'POST') {
+    // Take data from the form
+    const { email, phone, preference } = req.body;
+
+    // Insert into your Supabase table "subscribers"
+    const { data, error } = await supabase
+      .from('subscribers')
+      .insert([{ email, phone, preference }]);
+
+    // If there’s an error, return 500
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    // If success, return 200 with the new data
+    return res.status(200).json({ data });
+  } else {
+    // If someone tries GET or PUT, block it
+    res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
 function send(r,s,b){r.status(s).json(b)}
 function cfg(){const u=process.env.SUPABASE_URL,k=process.env.SUPABASE_SERVICE_ROLE_KEY;if(!u||!k)throw Error('Database is not configured.');return{u,k}}
 async function db(p,o={}){const{u,k}=cfg(),r=await fetch(`${u}/rest/v1/${p}`,{...o,headers:{apikey:k,authorization:`Bearer ${k}`,'content-type':'application/json',prefer:'return=representation',...(o.headers||{})}}),t=await r.text();if(!r.ok)throw Error(t||`Database error ${r.status}`);return t?JSON.parse(t):[]}
