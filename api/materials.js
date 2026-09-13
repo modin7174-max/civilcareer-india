@@ -1,5 +1,66 @@
-function send(res,s,b){res.status(s).json(b)}
-function cfg(){const url=process.env.SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;if(!url||!key)throw Error('Database is not configured.');return{url,key}}
-async function db(path,o={}){const{url,key}=cfg(),r=await fetch(`${url}/rest/v1/${path}`,{...o,headers:{apikey:key,authorization:`Bearer ${key}`,'content-type':'application/json',prefer:'return=representation',...(o.headers||{})}}),t=await r.text();if(!r.ok)throw Error(t||`Database error ${r.status}`);return t?JSON.parse(t):[]}
-const fields=['title_en','title_kn','category','exam_code','description_en','description_kn','preview_url','file_url','page_count','access_type','price','author','published'];function owner(req){return process.env.OWNER_KEY&&req.headers['x-owner-key']===process.env.OWNER_KEY}function pick(x){const y={};for(const k of fields)if(x[k]!==undefined)y[k]=x[k]===''?null:x[k];return y}
-module.exports=async(req,res)=>{try{if(req.method==='GET')return send(res,200,{materials:await db('materials?select=*&published=eq.true&order=created_at.desc')});if(!owner(req))return send(res,401,{error:'Incorrect owner key.'});if(req.method==='POST'){const row=pick(req.body||{});if(!row.title_en||!row.file_url)return send(res,400,{error:'English title and PDF link are required.'});row.published=true;row.access_type=row.access_type||'Free';const x=await db('materials',{method:'POST',body:JSON.stringify(row)});return send(res,201,{material:x[0]})}if(req.method==='PATCH'){const id=String(req.body?.id||'');if(!id)return send(res,400,{error:'Material ID required.'});const x=await db(`materials?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify(pick(req.body||{}))});return send(res,200,{material:x[0]})}if(req.method==='DELETE'){const id=String(req.body?.id||'');await db(`materials?id=eq.${encodeURIComponent(id)}`,{method:'DELETE'});return send(res,200,{deleted:true})}return send(res,405,{error:'Method not allowed.'})}catch(e){return send(res,500,{error:e.message})}};
+/**
+ * CivilCareer — Materials API
+ * File: api/materials.js
+ */
+const SUPA = process.env.SUPABASE_URL;
+const KEY  = process.env.SUPABASE_SERVICE_KEY;
+
+function supa(path, opts={}) {
+  return fetch(`${SUPA}/rest/v1/${path}`, {
+    ...opts,
+    headers: {
+      apikey: KEY,
+      Authorization: `Bearer ${KEY}`,
+      'Content-Type': 'application/json',
+      ...opts.headers
+    }
+  });
+}
+
+export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    const r = await supa('materials?published=eq.true&order=created_at.desc');
+    if (!r.ok) return res.status(500).json({ error: 'Failed to load materials' });
+    const materials = await r.json();
+    return res.status(200).json({ materials });
+  }
+
+  const key = req.headers['x-owner-key'] || req.body?.key;
+  if (key !== process.env.OWNER_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  if (req.method === 'POST') {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    delete body.id;
+    body.published = true;
+    body.access_type = body.access_type || 'Free';
+    const r = await supa('materials', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) { const e = await r.text(); return res.status(500).json({ error: e }); }
+    const data = await r.json();
+    return res.status(201).json({ material: data[0] });
+  }
+
+  if (req.method === 'PATCH') {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const { id, ...rest } = body;
+    if (!id) return res.status(400).json({ error: 'Missing id' });
+    const r = await supa(`materials?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(rest) });
+    if (!r.ok) return res.status(500).json({ error: 'Update failed' });
+    return res.status(200).json({ success: true });
+  }
+
+  if (req.method === 'DELETE') {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: 'Missing id' });
+    const r = await supa(`materials?id=eq.${id}`, { method: 'DELETE' });
+    if (!r.ok) return res.status(500).json({ error: 'Delete failed' });
+    return res.status(200).json({ success: true });
+  }
+
+  res.status(405).json({ error: 'Method not allowed' });
+}
