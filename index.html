@@ -36,8 +36,8 @@
     <h3 style="font-size:17px;font-weight:700;margin-bottom:4px">🔔 Get job alerts instantly</h3>
     <p style="font-size:13px;color:#9db3d0;margin-bottom:16px">New civil & Karnataka govt jobs delivered to you — free</p>
     <div style="display:flex;gap:8px;margin-bottom:12px">
-      <button onclick="setPref('email')" id="btnEmail" style="flex:1;padding:8px;border-radius:8px;border:2px solid #c9973c;background:rgba(201,151,60,0.15);color:#e8b04a;font-weight:600;font-size:13px;cursor:pointer">📧 Email</button>
-      <button onclick="setPref('whatsapp')" id="btnWA" style="flex:1;padding:8px;border-radius:8px;border:2px solid rgba(255,255,255,0.2);background:transparent;color:#9db3d0;font-weight:600;font-size:13px;cursor:pointer">💬 WhatsApp</button>
+      <button onclick="civilcivilSetPref('email')" id="btnEmail" style="flex:1;padding:8px;border-radius:8px;border:2px solid #c9973c;background:rgba(201,151,60,0.15);color:#e8b04a;font-weight:600;font-size:13px;cursor:pointer">📧 Email</button>
+      <button onclick="civilcivilSetPref('whatsapp')" id="btnWA" style="flex:1;padding:8px;border-radius:8px;border:2px solid rgba(255,255,255,0.2);background:transparent;color:#9db3d0;font-weight:600;font-size:13px;cursor:pointer">💬 WhatsApp</button>
     </div>
     <input id="alertEmail" type="email" placeholder="yourname@gmail.com" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:14px;box-sizing:border-box;outline:none;margin-bottom:8px"/>
     <div id="alertPhone" style="display:none;margin-bottom:8px">
@@ -47,13 +47,13 @@
       </div>
     </div>
     <div id="alertErr" style="color:#fca5a5;font-size:12px;margin-bottom:6px;display:none"></div>
-    <button onclick="subscribeAlert()" style="width:100%;padding:11px;background:#c9973c;color:#0b1f3a;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">Activate alerts →</button>
+    <button onclick="civilSubscribeAlert()" style="width:100%;padding:11px;background:#c9973c;color:#0b1f3a;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">Activate alerts →</button>
     <div id="alertSuccess" style="display:none;margin-top:12px;background:rgba(26,127,75,0.2);border-radius:8px;padding:10px;text-align:center;color:#6ee7b7;font-size:14px;font-weight:600">✅ Job alerts activated!</div>
   </div>
 </section>
 <script>
 let alertPref='email';
-function setPref(p){
+function civilcivilSetPref(p){
   alertPref=p;
   document.getElementById('alertEmail').style.display=p==='email'?'block':'none';
   document.getElementById('alertPhone').style.display=p==='whatsapp'?'block':'none';
