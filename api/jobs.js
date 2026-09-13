@@ -1,9 +1,16 @@
 /**
- * CivilCareer — Jobs API  v2 (fixed)
- * Fixes: wrong env var name, ES module syntax, admin visibility
+ * CivilCareer — Jobs API v3
+ * - Public GET: published jobs only
+ * - Admin GET: all jobs
+ * - Admin POST/PATCH/DELETE
+ * - Handles empty optional date fields safely
+ * - Uses Supabase service-role key on the server
  */
+
 const SUPA = process.env.SUPABASE_URL;
-const KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;   // ← FIXED (was SUPABASE_SERVICE_KEY)
+const KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY;
 
 function supa(path, opts = {}) {
   return fetch(`${SUPA}/rest/v1/${path}`, {
@@ -13,7 +20,7 @@ function supa(path, opts = {}) {
       Authorization: `Bearer ${KEY}`,
       'Content-Type': 'application/json',
       Prefer: 'return=representation',
-      ...opts.headers,
+      ...(opts.headers || {}),
     },
   });
 }
@@ -26,83 +33,291 @@ function isAdmin(req) {
   return getKey(req) === process.env.OWNER_KEY;
 }
 
-// ← FIXED: module.exports instead of export default
+function cleanDates(obj) {
+  const dateFields = [
+    'application_start',
+    'deadline',
+    'posted_at',
+    'published_at',
+    'expires_at',
+    'last_verified',
+    'last_verified_at',
+    'updated_at',
+    'created_at',
+  ];
+
+  for (const field of dateFields) {
+    if (obj[field] === '') {
+      obj[field] = null;
+    }
+  }
+
+  return obj;
+}
+
+function cleanArrays(obj) {
+  const arrayFields = [
+    'skills',
+    'qualifications',
+    'employment_types',
+    'experience_ranges',
+    'application_emails',
+    'locations',
+  ];
+
+  for (const field of arrayFields) {
+    if (obj[field] === '') {
+      obj[field] = [];
+    }
+
+    if (typeof obj[field] === 'string') {
+      try {
+        const parsed = JSON.parse(obj[field]);
+        if (Array.isArray(parsed)) {
+          obj[field] = parsed;
+        }
+      } catch (e) {
+        // Leave normal text values unchanged.
+      }
+    }
+  }
+
+  return obj;
+}
+
+function makeSlug(role, company, id) {
+  const base = `${role || 'job'}-${company || 'company'}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 100);
+
+  return `${base || 'job'}-${id || Date.now()}`;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,x-owner-key');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET,POST,PATCH,DELETE,OPTIONS'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type,x-owner-key'
+  );
 
-  // ── GET ─────────────────────────────────────────────────────────────
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (!SUPA || !KEY) {
+    return res.status(500).json({
+      error: 'Supabase server configuration is missing',
+    });
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // GET
+  // ────────────────────────────────────────────────────────────────────
+
   if (req.method === 'GET') {
-    // ← FIXED: admin sees ALL jobs, public sees only published
     const query = isAdmin(req)
       ? 'jobs?order=created_at.desc'
       : 'jobs?published=eq.true&order=created_at.desc';
 
-    const r = await supa(query);
-    if (!r.ok) {
-      const e = await r.text();
-      return res.status(500).json({ error: 'Failed to load jobs', detail: e });
+    try {
+      const r = await supa(query);
+
+      if (!r.ok) {
+        const detail = await r.text();
+
+        return res.status(500).json({
+          error: 'Failed to load jobs',
+          details: detail,
+        });
+      }
+
+      const jobs = await r.json();
+
+      return res.status(200).json({ jobs });
+    } catch (err) {
+      return res.status(500).json({
+        error: 'Failed to load jobs',
+        details: err.message,
+      });
     }
-    const jobs = await r.json();
-    return res.status(200).json({ jobs });
   }
 
-  // ── Auth required for writes ─────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────
+  // ADMIN AUTH REQUIRED FOR WRITES
+  // ────────────────────────────────────────────────────────────────────
+
   if (!isAdmin(req)) {
-    return res.status(401).json({ error: 'Invalid owner key' });
+    return res.status(401).json({
+      error: 'Invalid owner key',
+    });
   }
 
   let body = req.body || {};
+
   if (typeof body === 'string') {
-    try { body = JSON.parse(body); } catch (e) { body = {}; }
+    try {
+      body = JSON.parse(body);
+    } catch (e) {
+      return res.status(400).json({
+        error: 'Invalid JSON body',
+      });
+    }
   }
 
-  // ── POST — create job ────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────
+  // POST — CREATE JOB
+  // ────────────────────────────────────────────────────────────────────
+
   if (req.method === 'POST') {
-    const { id, key, ...rest } = body;
-    rest.published = true;
-    if (!rest.status) rest.status = 'Active';
-    rest.created_at = rest.created_at || new Date().toISOString();
+    try {
+      const { id, key, ...rest } = body;
 
-    const r = await supa('jobs', { method: 'POST', body: JSON.stringify(rest) });
-    if (!r.ok) {
-      const e = await r.text();
-      return res.status(500).json({ error: e });
+      cleanDates(rest);
+      cleanArrays(rest);
+
+      rest.published = true;
+
+      if (!rest.status) {
+        rest.status = 'Active';
+      }
+
+      if (!rest.created_at) {
+        rest.created_at = new Date().toISOString();
+      }
+
+      // Generate slug if one was not supplied.
+      if (!rest.slug) {
+        rest.slug = makeSlug(
+          rest.role,
+          rest.company,
+          Date.now()
+        );
+      }
+
+      const r = await supa('jobs', {
+        method: 'POST',
+        body: JSON.stringify(rest),
+      });
+
+      if (!r.ok) {
+        const detail = await r.text();
+
+        return res.status(500).json({
+          error: 'Job could not be saved',
+          details: detail,
+        });
+      }
+
+      const data = await r.json();
+
+      return res.status(201).json({
+        success: true,
+        job: Array.isArray(data) ? data[0] : data,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        error: 'Job could not be saved',
+        details: err.message,
+      });
     }
-    const data = await r.json();
-    return res.status(201).json({ job: Array.isArray(data) ? data[0] : data, success: true });
   }
 
-  // ── PATCH — update job ───────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────
+  // PATCH — UPDATE JOB
+  // ────────────────────────────────────────────────────────────────────
+
   if (req.method === 'PATCH') {
-    const { id, key, ...rest } = body;
-    if (!id) return res.status(400).json({ error: 'Missing id' });
+    try {
+      const { id, key, ...rest } = body;
 
-    const r = await supa(`jobs?id=eq.${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(rest),
-    });
-    if (!r.ok) {
-      const e = await r.text();
-      return res.status(500).json({ error: e });
+      if (!id) {
+        return res.status(400).json({
+          error: 'Missing id',
+        });
+      }
+
+      cleanDates(rest);
+      cleanArrays(rest);
+
+      const r = await supa(
+        `jobs?id=eq.${encodeURIComponent(id)}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(rest),
+        }
+      );
+
+      if (!r.ok) {
+        const detail = await r.text();
+
+        return res.status(500).json({
+          error: 'Job could not be updated',
+          details: detail,
+        });
+      }
+
+      const data = await r.json();
+
+      return res.status(200).json({
+        success: true,
+        job: Array.isArray(data) ? data[0] : data,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        error: 'Job could not be updated',
+        details: err.message,
+      });
     }
-    return res.status(200).json({ success: true });
   }
 
-  // ── DELETE ───────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────
+  // DELETE — DELETE JOB
+  // ────────────────────────────────────────────────────────────────────
+
   if (req.method === 'DELETE') {
-    const { id } = body;
-    if (!id) return res.status(400).json({ error: 'Missing id' });
+    try {
+      const { id } = body;
 
-    const r = await supa(`jobs?id=eq.${id}`, { method: 'DELETE' });
-    if (!r.ok) {
-      const e = await r.text();
-      return res.status(500).json({ error: e });
+      if (!id) {
+        return res.status(400).json({
+          error: 'Missing id',
+        });
+      }
+
+      const r = await supa(
+        `jobs?id=eq.${encodeURIComponent(id)}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      if (!r.ok) {
+        const detail = await r.text();
+
+        return res.status(500).json({
+          error: 'Job could not be deleted',
+          details: detail,
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        error: 'Job could not be deleted',
+        details: err.message,
+      });
     }
-    return res.status(200).json({ success: true });
   }
 
-  res.status(405).json({ error: 'Method not allowed' });
+  return res.status(405).json({
+    error: 'Method not allowed',
+  });
 };
