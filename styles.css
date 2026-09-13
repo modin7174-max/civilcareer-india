@@ -68,3 +68,44 @@
 .edu-chips button,.org-chips button{background:#f4f6fb;border:1px solid #dde3ef;border-radius:20px;padding:4px 12px;font-size:.75rem;font-weight:600;color:#3d4966;cursor:pointer;transition:all .2s;white-space:nowrap}
 .edu-chips button.active,.org-chips button.active{background:#0b1f3a;color:#fff;border-color:#0b1f3a}
 .edu-chips button:hover:not(.active),.org-chips button:hover:not(.active){background:#e4e8f0}
+
+
+/* ── Urgency Strip ───────────────────────────────────────── */
+.urgency-strip{background:#7f1d1d;padding:.5rem 0;overflow:hidden}
+.urgency-inner{display:flex;align-items:center;gap:.75rem}
+.urgency-label{background:#ef4444;color:#fff;font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:12px;white-space:nowrap;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+.urgency-scroll{display:flex;gap:.5rem;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.urgency-scroll::-webkit-scrollbar{display:none}
+.urgency-job{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:4px 12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:.5rem;white-space:nowrap;color:#fff;font-size:.75rem;transition:background .2s}
+.urgency-job:hover{background:rgba(255,255,255,0.2)}
+.urgency-job b{font-weight:700}
+.urgency-job span{opacity:.75;font-size:.7rem}
+.urg-tag{background:#ef4444;color:#fff;border-radius:6px;padding:1px 6px;font-size:.65rem;font-weight:700;opacity:1!important}
+
+/* ── How CivilCareer Works ───────────────────────────────── */
+.how-section{background:linear-gradient(135deg,#f8faff 0%,#eef2ff 100%);padding:3rem 0}
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin-top:2rem}
+.how-step{background:#fff;border-radius:16px;padding:1.5rem;box-shadow:0 2px 12px rgba(11,31,58,0.06);border-top:4px solid #0b1f3a;transition:transform .2s}
+.how-step:hover{transform:translateY(-3px)}
+.how-num{font-size:2rem;font-weight:900;color:#e4e8f0;line-height:1;margin-bottom:.75rem}
+.how-step h3{font-size:1rem;font-weight:700;color:#0b1f3a;margin-bottom:.5rem}
+.how-step p{font-size:.85rem;color:#5a6478;line-height:1.6}
+
+/* ── Featured Organizations Grid ────────────────────────── */
+.org-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.75rem;margin-top:1.25rem}
+.org-tile{display:flex;flex-direction:column;align-items:center;gap:.35rem;background:#fff;border:1px solid #e4e8f0;border-radius:14px;padding:1rem .75rem;text-decoration:none;cursor:pointer;transition:all .2s;text-align:center}
+.org-tile:hover{border-color:#0b1f3a;box-shadow:0 4px 14px rgba(11,31,58,0.1);transform:translateY(-2px)}
+.org-icon{font-size:1.5rem;line-height:1}
+.org-tile b{font-size:.85rem;font-weight:800;color:#0b1f3a}
+.org-tile span{font-size:.68rem;color:#7a8499}
+
+/* ── General card polish ─────────────────────────────────── */
+.job-card,.exam-card,.material-card{transition:box-shadow .2s,transform .2s}
+.job-card:hover,.exam-card:hover{box-shadow:0 6px 24px rgba(11,31,58,0.1);transform:translateY(-2px)}
+
+@media(max-width:600px){
+  .join-bar-inner{flex-direction:column;gap:.4rem;text-align:center}
+  .org-grid{grid-template-columns:repeat(4,1fr)}
+  .how-grid{grid-template-columns:1fr}
+  .urgency-label{display:none}
+}
