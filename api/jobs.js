@@ -181,11 +181,13 @@ module.exports = async function handler(req, res) {
       cleanDates(rest);
       cleanArrays(rest);
 
-      rest.published = true;
+      if (typeof rest.published !== 'boolean') {
+  rest.published = true;
+}
 
-      if (!rest.status) {
-        rest.status = 'Active';
-      }
+if (!rest.status) {
+  rest.status = rest.published ? 'Active' : 'Pending Review';
+}
 
       if (!rest.created_at) {
         rest.created_at = new Date().toISOString();
