@@ -154,7 +154,6 @@ async function fetchJob(url) {
     role,
     company,
     location,
-    posted_date,
     qualification,
     experience_level,
     description: text.slice(0, 15000),
