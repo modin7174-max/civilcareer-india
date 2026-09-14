@@ -286,7 +286,7 @@ function jobEditor(j={}){
     <label>Company / organization<input name="company" value="${val(j.company)}"></label>
     <label>Recruitment authority<input name="recruitment_authority" value="${val(j.recruitment_authority)}" placeholder="e.g. KPSC, NHAI"></label>
     <label>Location<input name="location" value="${val(j.location)}"></label>
-    <label>State<input name="state" value="${val(j.state||'Karnataka')}"></label>
+    <label>State<input name="state" value="${val(j.state)}"></label>
     <label>Department / civil discipline<input name="discipline" value="${val(j.discipline)}"></label>
     <label>Qualification<input name="qualification" value="${val(j.qualification)}"></label>
     <label>Experience<input name="experience_level" value="${val(j.experience_level)}" placeholder="e.g. 3-5 years"></label>
