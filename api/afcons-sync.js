@@ -93,12 +93,9 @@ module.exports = async function handler(req, res) {
       ['Company']
     );
 
-    const company = afterLabel(
-      text,
-      'Company',
-      ['Roles and Responsibilities', 'Education Qualifications']
-    );
-
+    const company =
+  afterLabel(text,'Company',['Roles and Responsibilities','Education Qualifications']) ||
+  'Afcons Infrastructure Limited';
     const date = afterLabel(
       text,
       'Date',
