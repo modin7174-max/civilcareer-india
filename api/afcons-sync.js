@@ -103,21 +103,31 @@ async function fetchJob(url) {
     getMeta(html, 'twitter:title') ||
     'Untitled vacancy';
 
-  const company =
-    extractLabel(text, 'Company') ||
-    'Afcons Infrastructure Limited';
+ const company =
+  extractAfconsField(text, 'Company', [
+    'Roles and Responsibilities'
+  ]) ||
+  'Afcons Infrastructure Limited';
 
-  const location =
-    extractLabel(text, 'Location');
+const location =
+  extractAfconsField(text, 'Location', [
+    'Company'
+  ]);
 
-  const posted_date =
-    extractLabel(text, 'Date');
+const posted_date =
+  extractAfconsField(text, 'Date', [
+    'Location'
+  ]);
 
-  const qualification =
-    extractLabel(text, 'Education Qualifications');
+const qualification =
+  extractAfconsField(text, 'Educational Essential', [
+    'Educational Desirable'
+  ]);
 
-  const experience_level =
-    extractLabel(text, 'Experience Range');
+const experience_level =
+  extractAfconsField(text, 'Experience Range', [
+    'Work Environment'
+  ]);
 
   return {
     source_url: url,
