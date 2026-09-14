@@ -1,5 +1,5 @@
-const AFCONS_JOB_URL =
-  'https://careers.afcons.com/job/India-SITE-ENGINEER-URBAN-Any/58071744/';
+const AFCONS_LIST_URL =
+  'https://careers.afcons.com/search/?createNewAlert=no&q=&locationsearch=';
 
 function clean(value = '') {
   return String(value)
@@ -14,13 +14,15 @@ function clean(value = '') {
 
 function getMeta(html, name) {
   const re = new RegExp(
-    `<meta[^>]+(?:property|name)=["']${name}["'][^>]+content=["']([^"']*)["']`,
+    `<meta[^>]+(?:name|property)=["']${name.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      '\\$&'
+    )}["'][^>]+content=["']([^"']*)["']`,
     'i'
   );
 
-  const match = html.match(re);
-
-  return clean(match ? match[1] : '');
+  const m = html.match(re);
+  return m ? clean(m[1]) : '';
 }
 
 function htmlToText(html) {
@@ -33,100 +35,152 @@ function htmlToText(html) {
   );
 }
 
-function afterLabel(text, label, nextLabels = []) {
-  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  const next =
-    nextLabels.length
-      ? `(?=\\s+(?:${nextLabels
-          .map(x =>
-            x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-          )
-          .join('|')})\\s*:)`
-      : '$';
-
+function extractLabel(text, label) {
   const re = new RegExp(
-    `${escaped}\\s*:\\s*(.*?)(?:${next})`,
+    `${label}\\s*:\\s*(.*?)(?=\\s+(?:Date|Location|Company|Roles and Responsibilities|Education Qualifications|Experience Range|Work Environment)\\s*:|$)`,
     'i'
   );
 
-  const match = text.match(re);
+  const m = text.match(re);
+  return clean(m ? m[1] : '');
+}
 
-  return clean(match ? match[1] : '');
+function extractJobLinks(html) {
+  const links = [];
+  const seen = new Set();
+
+  const re =
+    /href=["']([^"']*\/job\/[^"']+)["']/gi;
+
+  let m;
+
+  while ((m = re.exec(html))) {
+    let url = m[1];
+
+    if (url.startsWith('/')) {
+      url = 'https://careers.afcons.com' + url;
+    }
+
+    url = url.replace(/&amp;/gi, '&');
+
+    if (!seen.has(url)) {
+      seen.add(url);
+      links.push(url);
+    }
+  }
+
+  return links;
+}
+
+async function fetchJob(url) {
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (compatible; CivilCareerJobs/2.0)',
+      Accept:
+        'text/html,application/xhtml+xml'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Afcons job fetch failed: ${response.status}`
+    );
+  }
+
+  const html = await response.text();
+  const text = htmlToText(html);
+
+  const role =
+    getMeta(html, 'og:title') ||
+    getMeta(html, 'twitter:title') ||
+    'Untitled vacancy';
+
+  const company =
+    extractLabel(text, 'Company') ||
+    'Afcons Infrastructure Limited';
+
+  const location =
+    extractLabel(text, 'Location');
+
+  const posted_date =
+    extractLabel(text, 'Date');
+
+  const qualification =
+    extractLabel(text, 'Education Qualifications');
+
+  const experience_level =
+    extractLabel(text, 'Experience Range');
+
+  return {
+    source_url: url,
+    application_url: url,
+    role,
+    company,
+    location,
+    posted_date,
+    qualification,
+    experience_level,
+    description: text.slice(0, 15000),
+    sector: 'Private',
+    status: 'Pending Review',
+    published: false
+  };
 }
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({
+      success: false,
       error: 'Method not allowed'
     });
   }
 
   try {
-    const response = await fetch(AFCONS_JOB_URL, {
+    const response = await fetch(AFCONS_LIST_URL, {
       headers: {
-        'user-agent':
+        'User-Agent':
           'Mozilla/5.0 (compatible; CivilCareerJobs/2.0)',
-        accept:
+        Accept:
           'text/html,application/xhtml+xml'
       }
     });
 
     if (!response.ok) {
-      return res.status(502).json({
-        error: 'Could not fetch Afcons job page',
-        status: response.status
-      });
+      throw new Error(
+        `Afcons listing fetch failed: ${response.status}`
+      );
     }
 
     const html = await response.text();
-    const text = htmlToText(html);
 
-    const role =
-      getMeta(html, 'og:title') ||
-      getMeta(html, 'twitter:title') ||
-      'Untitled vacancy';
+    const links = extractJobLinks(html);
 
-    const location = afterLabel(
-      text,
-      'Location',
-      ['Company']
-    );
+    const jobs = [];
 
-    const company =
-  afterLabel(text,'Company',['Roles and Responsibilities','Education Qualifications']) ||
-  'Afcons Infrastructure Limited';
-    const date = afterLabel(
-      text,
-      'Date',
-      ['Location']
-    );
+    for (const url of links) {
+      try {
+        const job = await fetchJob(url);
+        jobs.push(job);
+      } catch (error) {
+        jobs.push({
+          source_url: url,
+          error: error.message
+        });
+      }
+    }
 
     return res.status(200).json({
       success: true,
-      source_url: AFCONS_JOB_URL,
-
-      extracted: {
-        role,
-        company,
-        location,
-        posted_date: date,
-        sector: 'Private',
-
-        qualification:
-          'Bachelor’s Degree in Civil Engineering / Diploma in Civil Engineering',
-
-        experience_level:
-          '5 to 10 years',
-
-        description: text.slice(0, 15000)
-      }
+      source: AFCONS_LIST_URL,
+      total_found: links.length,
+      total_processed: jobs.length,
+      jobs
     });
-
   } catch (error) {
     return res.status(500).json({
-      error: 'Afcons parser failed',
-      details: error.message
+      success: false,
+      error: error.message
     });
   }
 };
