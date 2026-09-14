@@ -953,7 +953,7 @@ module.exports = async function handler(
   return res.status(200).json({
     success: true,
     collector:
-      "CivilCareer Unified Job Sync",
+      "CivilCareer Unified Job Sync v2",
     started_at: startedAt,
     finished_at:
       new Date().toISOString(),
