@@ -124,10 +124,13 @@ const qualification =
     'Educational Desirable'
   ]);
 
-const experience_level =
-  extractAfconsField(text, 'Experience Range', [
-    'Work Environment'
-  ]) ||
+const experienceMatch = text.match(
+  /Experience Range\s*(.*?)(?=\s+Work Environment\b|$)/i
+);
+
+const experience_level = clean(
+  experienceMatch ? experienceMatch[1] : ''
+);
   extractAfconsField(text, 'Experience Range', [
     'Apply now'
   ]);
