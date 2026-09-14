@@ -188,3 +188,23 @@ nav a[data-count]::after{content:attr(data-count);background:#c9973c;color:#0b1f
 .exam-chips button{background:#f4f6fb;border:1px solid #dde3ef;border-radius:20px;padding:5px 14px;font-size:.78rem;font-weight:600;color:#3d4966;cursor:pointer;transition:all .2s}
 .exam-chips button.active{background:#0b1f3a;color:#fff;border-color:#0b1f3a}
 .exam-chips button:hover:not(.active){background:#e4e8f0}
+
+/* ── Community Join Bar (bottom) ─────────────────────────── */
+.community-bar{background:linear-gradient(135deg,#0b1f3a 0%,#1a3a6e 100%);padding:2rem 0;border-top:3px solid #c9973c}
+.community-inner{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap}
+.community-text{display:flex;align-items:center;gap:1rem;flex:1;min-width:200px}
+.community-icon{font-size:2rem;flex-shrink:0}
+.community-text strong{display:block;color:#fff;font-size:1rem;font-weight:800;margin-bottom:3px}
+.community-text span{color:rgba(255,255,255,0.6);font-size:.82rem}
+.community-btns{display:flex;gap:.75rem;flex-shrink:0;flex-wrap:wrap}
+.btn-tg{display:inline-flex;align-items:center;gap:.5rem;background:#229ED9;color:#fff;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.85rem;text-decoration:none;transition:opacity .2s}
+.btn-tg:hover{opacity:.85}
+.btn-wp{display:inline-flex;align-items:center;gap:.5rem;background:#25D366;color:#fff;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.85rem;text-decoration:none;transition:opacity .2s}
+.btn-wp:hover{opacity:.85}
+
+@media(max-width:600px){
+  .community-inner{flex-direction:column;text-align:center}
+  .community-text{flex-direction:column;align-items:center}
+  .community-btns{justify-content:center;width:100%}
+  .btn-tg,.btn-wp{flex:1;justify-content:center}
+}
