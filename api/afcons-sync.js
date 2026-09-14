@@ -184,21 +184,19 @@ module.exports = async function handler(req, res) {
       try {
         const job = await fetchJob(url);
 
-const searchText = [
-  job.role,
-  job.qualification,
-  job.description
-].join(' ').toLowerCase();
+const title = String(job.role || '').toLowerCase();
+const qualification = String(job.qualification || '').toLowerCase();
 
-const civilKeywords = [
-  'civil engineering',
-  'civil engineer',
+const civilTitle = [
   'civil',
   'structural',
   'construction',
-  'quantity survey',
   'site engineer',
+  'quantity survey',
+  'planner',
   'planning engineer',
+  'project engineer',
+  'project manager',
   'bridge',
   'metro',
   'highway',
@@ -207,15 +205,48 @@ const civilKeywords = [
   'marine',
   'infrastructure',
   'tunnel',
-  'geotechnical',
-  'building',
-  'estimation',
-  'billing'
+  'geotechnical'
 ];
 
-const isCivilJob = civilKeywords.some(keyword =>
-  searchText.includes(keyword)
+const civilQualification = [
+  'civil engineering',
+  'civil engineer',
+  'structural engineering',
+  'civil/structural'
+];
+
+const excludedTitle = [
+  'p&a',
+  'personnel',
+  'admin',
+  'talent acquisition',
+  'hr',
+  'human resource',
+  'instrumentation',
+  'electrical',
+  'mechanical',
+  'finance',
+  'accounts',
+  'legal',
+  'procurement',
+  'secretarial'
+];
+
+const isExcluded = excludedTitle.some(keyword =>
+  title.includes(keyword)
 );
+
+const hasCivilTitle = civilTitle.some(keyword =>
+  title.includes(keyword)
+);
+
+const hasCivilQualification = civilQualification.some(keyword =>
+  qualification.includes(keyword)
+);
+
+const isCivilJob =
+  !isExcluded &&
+  (hasCivilTitle || hasCivilQualification);
 
 if (isCivilJob) {
   jobs.push(job);
