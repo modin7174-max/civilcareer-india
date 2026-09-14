@@ -1,5 +1,5 @@
 // CivilCareer Service Worker — PWA Offline Support
-const CACHE_NAME = "civilcareer-v1";
+const CACHE_NAME = "civilcareer-v2";
 
 // Pages and assets to cache immediately on install
 const STATIC_ASSETS = [
