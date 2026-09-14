@@ -45,7 +45,7 @@ jobEditor = function(j = {}) {
           <input name="country" value="${val(j.country || 'India')}" placeholder="e.g. India">
         </label>
         <label>State / Region
-          <input name="state" value="${val(j.state || 'Karnataka')}" placeholder="e.g. Karnataka">
+          <input name="state" value="${val(j.state)}" placeholder="e.g. Karnataka">
         </label>
         <label>District
           <input name="district" value="${val(j.district)}" placeholder="e.g. Dharwad, Hassan">
