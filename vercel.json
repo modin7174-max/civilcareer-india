@@ -1,1 +1,82 @@
-{"functions":{"api/*.js":{"maxDuration":15}},"rewrites":[{"source":"/exams/:path*","destination":"/index.html"},{"source":"/jobs/:path*","destination":"/index.html"},{"source":"/private-jobs","destination":"/index.html"},{"source":"/government-jobs","destination":"/index.html"},{"source":"/exams","destination":"/index.html"},{"source":"/study-materials","destination":"/index.html"},{"source":"/post-a-job","destination":"/index.html"},{"source":"/submit-resource","destination":"/index.html"},{"source":"/report","destination":"/index.html"},{"source":"/about","destination":"/index.html"},{"source":"/search","destination":"/index.html"},{"source":"/admin","destination":"/index.html"}],"headers":[{"source":"/(.*)","headers":[{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"key":"Permissions-Policy","value":"camera=(), microphone=(), geolocation=()"}]}]}
+{
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 15
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/exams/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/jobs/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/private-jobs",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/government-jobs",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/exams",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/study-materials",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/post-a-job",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/submit-resource",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/report",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/search",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/company-sync",
+      "schedule": "30 2 * * *"
+    }
+  ]
+}
