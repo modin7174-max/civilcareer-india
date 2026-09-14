@@ -109,10 +109,13 @@ async function fetchJob(url) {
   ]) ||
   'Afcons Infrastructure Limited';
 
-const location =
-  extractAfconsField(text, 'Location', [
-    'Company'
-  ]);
+const locationMatch = text.match(
+  /(?:Date\s*:\s*[^:]+?\s+)?Location\s*:\s*(.*?)(?=\s+Company\s*:)/i
+);
+
+const location = clean(
+  locationMatch ? locationMatch[1] : ''
+);
 
 const posted_date =
   extractAfconsField(text, 'Date', [
