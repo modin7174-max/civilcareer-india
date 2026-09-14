@@ -1,13 +1,16 @@
 {
-  "name": "CivilCareer — Civil Engineering Jobs & Karnataka Govt Jobs",
+  "name": "CivilCareer India — Civil Engineering Jobs",
   "short_name": "CivilCareer",
-  "description": "Civil engineering jobs across India and Karnataka government recruitment in one place.",
+  "description": "Civil engineering jobs, government jobs, exams and study materials in one place.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b1f3a",
   "theme_color": "#0b1f3a",
   "orientation": "portrait-primary",
-  "categories": ["business", "education"],
+  "categories": [
+    "business",
+    "education"
+  ],
   "lang": "en-IN",
   "icons": [
     {
@@ -53,21 +56,39 @@
       "short_name": "Civil Jobs",
       "description": "Browse private civil engineering jobs",
       "url": "/private-jobs",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Karnataka Govt Jobs",
       "short_name": "Govt Jobs",
       "description": "Browse Karnataka government recruitment",
       "url": "/government-jobs",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Exams",
       "short_name": "Exams",
       "description": "Karnataka competitive exams calendar",
       "url": "/exams",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/icons/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
-  ]
+  ],
+  "id": "/",
+  "scope": "/",
+  "prefer_related_applications": false
 }

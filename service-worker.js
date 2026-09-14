@@ -1,7 +1,6 @@
-// CivilCareer Service Worker — PWA Offline Support
-const CACHE_NAME = "civilcareer-v2";
+// CivilCareer India — PWA Service Worker
+const CACHE_NAME = "civilcareer-v3";
 
-// Pages and assets to cache immediately on install
 const STATIC_ASSETS = [
   "/",
   "/private-jobs",
@@ -9,80 +8,83 @@ const STATIC_ASSETS = [
   "/exams",
   "/study-materials",
   "/about",
+  "/manifest.json",
+  "/styles.css",
+  "/styles-patch.css",
+  "/app.js",
+  "/v8.js"
 ];
 
-// Install: pre-cache static shell
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("[SW] Pre-caching shell assets");
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
-// Activate: clean up old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
         keys
           .filter((key) => key !== CACHE_NAME)
-          .map((key) => {
-            console.log("[SW] Deleting old cache:", key);
-            return caches.delete(key);
-          })
+          .map((key) => caches.delete(key))
       )
     )
   );
   self.clients.claim();
 });
 
-// Fetch: network-first for API, cache-first for assets
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
+  const request = event.request;
+  const url = new URL(request.url);
 
-  // Always network-first for API calls (job data, exam data)
+  // Never intercept non-GET requests. This prevents POST/PUT/PATCH caching errors.
+  if (request.method !== "GET") return;
+
+  // API: network first, cached GET fallback.
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(
-      fetch(event.request)
+      fetch(request)
         .then((response) => {
-          // Cache successful API responses for offline fallback
           if (response.ok) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match(request))
     );
     return;
   }
 
-  // Cache-first for static assets (images, CSS, JS)
+  // App shell/static assets: network first for JS/CSS so deployments update quickly.
   if (
-    url.pathname.match(/\.(png|jpg|jpeg|svg|webp|ico|css|js|woff2?)$/)
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".css") ||
+    url.pathname === "/manifest.json"
   ) {
     event.respondWith(
-      caches.match(event.request).then(
-        (cached) => cached || fetch(event.request).then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
           return response;
         })
-      )
+        .catch(() => caches.match(request))
     );
     return;
   }
 
-  // Stale-while-revalidate for HTML pages
+  // HTML: stale cached page first, refresh cache in background.
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fresh = fetch(event.request).then((response) => {
+    caches.match(request).then((cached) => {
+      const fresh = fetch(request).then((response) => {
         if (response.ok) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
       });
@@ -90,16 +92,3 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
-
-// Background sync for job alert subscriptions submitted offline
-self.addEventListener("sync", (event) => {
-  if (event.tag === "sync-job-alerts") {
-    event.waitUntil(syncJobAlerts());
-  }
-});
-
-async function syncJobAlerts() {
-  // Retrieve pending subscriptions from IndexedDB and retry POST
-  // This runs when the device comes back online
-  console.log("[SW] Syncing pending job alert subscriptions");
-}
