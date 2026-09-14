@@ -208,3 +208,137 @@ nav a[data-count]::after{content:attr(data-count);background:#c9973c;color:#0b1f
   .community-btns{justify-content:center;width:100%}
   .btn-tg,.btn-wp{flex:1;justify-content:center}
 }
+
+/* ═══════════════════════════════════════════════════════════
+   V0 BOLD REDESIGN — Applied to existing site
+   Colours, fonts, full-width, bold typography
+═══════════════════════════════════════════════════════════ */
+
+/* ── Google Font — Plus Jakarta Sans (bold, clean) ───────── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+
+/* ── Root color overrides ────────────────────────────────── */
+:root{
+  --cc-navy:     #0d1b3e;
+  --cc-navy-mid: #1a3063;
+  --cc-navy-light:#253a70;
+  --cc-orange:   #c9973c;
+  --cc-blue-btn: #2563eb;
+  --cc-white:    #ffffff;
+  --cc-text-dim: rgba(255,255,255,0.65);
+}
+
+/* ── Global font ─────────────────────────────────────────── */
+body,input,button,select,textarea{
+  font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif!important;
+}
+
+/* ── Safety notice bar ───────────────────────────────────── */
+.notice{
+  background:var(--cc-navy)!important;
+  color:rgba(255,255,255,0.85)!important;
+  border-bottom:1px solid rgba(255,255,255,0.08)!important;
+}
+.notice strong{color:#f59e0b!important}
+
+/* ── Navigation — white, bold ────────────────────────────── */
+.site-header{
+  background:#fff!important;
+  border-bottom:1px solid #e4e8f0!important;
+  box-shadow:0 2px 8px rgba(0,0,0,0.06)!important;
+}
+.site-header a,.nav a{color:#0d1b3e!important;font-weight:600!important}
+.logo{font-weight:900!important;font-size:1.25rem!important;color:#0d1b3e!important}
+.logo span{color:var(--cc-blue-btn)!important}
+
+/* ── Hero — full width dark navy gradient ────────────────── */
+.hero,.page-hero{
+  background:linear-gradient(135deg,#1e3163 0%,#0d1b3e 55%,#080f20 100%)!important;
+  width:100vw!important;
+  position:relative!important;
+  left:50%!important;
+  right:50%!important;
+  margin-left:-50vw!important;
+  margin-right:-50vw!important;
+  padding-left:0!important;
+  padding-right:0!important;
+}
+.hero .container,.page-hero .container{
+  max-width:1200px!important;
+  margin:0 auto!important;
+  padding:4rem 1.5rem!important;
+}
+
+/* ── Hero headline — ultra bold ──────────────────────────── */
+.hero h1,.hero-headline,.hero h2{
+  font-size:clamp(2.4rem,5.5vw,4rem)!important;
+  font-weight:900!important;
+  line-height:1.05!important;
+  letter-spacing:-0.03em!important;
+  color:#fff!important;
+}
+.hero p,.hero .scope{color:var(--cc-text-dim)!important;font-size:1.05rem!important;line-height:1.7!important}
+.hero .scope i{color:rgba(255,255,255,0.3)!important}
+
+/* ── Eyebrow labels — orange uppercase ───────────────────── */
+.eyebrow{
+  color:var(--cc-orange)!important;
+  font-weight:700!important;
+  text-transform:uppercase!important;
+  letter-spacing:.1em!important;
+  font-size:.72rem!important;
+}
+
+/* ── CTA buttons — v0 bold rounded ──────────────────────── */
+.hero .btn,.hero a.btn,[class*="hero"] .btn{border-radius:999px!important;font-weight:700!important;font-size:.95rem!important;padding:12px 26px!important}
+.hero .btn.primary{background:var(--cc-blue-btn)!important;color:#fff!important;border:none!important}
+.hero .btn.primary:hover{background:#1d4ed8!important}
+.hero .btn.secondary,.hero .btn:not(.primary){background:transparent!important;color:#fff!important;border:2px solid rgba(255,255,255,0.55)!important}
+.hero .btn.secondary:hover,.hero .btn:not(.primary):hover{background:rgba(255,255,255,0.1)!important}
+
+/* ── Hero quote card ─────────────────────────────────────── */
+.hero-panel,.principle-card{
+  background:rgba(255,255,255,0.1)!important;
+  border:1px solid rgba(255,255,255,0.18)!important;
+  border-radius:20px!important;
+  backdrop-filter:blur(10px)!important;
+}
+.hero-panel blockquote,.hero-panel p{color:#fff!important}
+.hero-panel .eyebrow{color:var(--cc-orange)!important}
+
+/* ── Job cards — colored top border like v0 ─────────────── */
+.job-card:nth-child(4n+1){border-top:3px solid #22c55e!important;border-left:none!important}
+.job-card:nth-child(4n+2){border-top:3px solid var(--cc-orange)!important;border-left:none!important}
+.job-card:nth-child(4n+3){border-top:3px solid #3b82f6!important;border-left:none!important}
+.job-card:nth-child(4n+4){border-top:3px solid #a855f7!important;border-left:none!important}
+.job-card{border-radius:16px!important;border-left:none!important}
+.job-card.card-urgent{border-top:3px solid #ef4444!important;border-left:none!important}
+
+/* ── Section headings — bolder ───────────────────────────── */
+h1,h2,h3{font-weight:800!important;letter-spacing:-0.02em!important}
+h2{font-size:clamp(1.5rem,3vw,2.2rem)!important}
+.section-intro h2,.section-head h2{color:var(--cc-navy)!important}
+
+/* ── Full width sections — no left/right gap ─────────────── */
+.stats-bar,.join-bar,.community-bar,.notice,.site-header,.site-footer{
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+/* ── Cards section background ────────────────────────────── */
+.how-section{background:linear-gradient(135deg,#f0f4ff,#e8eeff)!important}
+.how-step{border-top:3px solid var(--cc-blue-btn)!important}
+
+/* ── Stats bar — deeper navy ─────────────────────────────── */
+.stats-bar{background:var(--cc-navy)!important}
+.stat-num{color:var(--cc-orange)!important;font-weight:900!important}
+
+/* ── Org tiles — bold border ─────────────────────────────── */
+.org-tile:hover{border-color:var(--cc-blue-btn)!important}
+.org-tile b{color:var(--cc-navy)!important}
+
+@media(max-width:768px){
+  .hero h1,.hero-headline{font-size:2.2rem!important}
+  .hero .container,.page-hero .container{padding:2.5rem 1rem!important}
+}
