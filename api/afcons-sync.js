@@ -183,7 +183,43 @@ module.exports = async function handler(req, res) {
     for (const url of links) {
       try {
         const job = await fetchJob(url);
-        jobs.push(job);
+
+const searchText = [
+  job.role,
+  job.qualification,
+  job.description
+].join(' ').toLowerCase();
+
+const civilKeywords = [
+  'civil engineering',
+  'civil engineer',
+  'civil',
+  'structural',
+  'construction',
+  'quantity survey',
+  'site engineer',
+  'planning engineer',
+  'bridge',
+  'metro',
+  'highway',
+  'road',
+  'water',
+  'marine',
+  'infrastructure',
+  'tunnel',
+  'geotechnical',
+  'building',
+  'estimation',
+  'billing'
+];
+
+const isCivilJob = civilKeywords.some(keyword =>
+  searchText.includes(keyword)
+);
+
+if (isCivilJob) {
+  jobs.push(job);
+}
       } catch (error) {
         jobs.push({
           source_url: url,
