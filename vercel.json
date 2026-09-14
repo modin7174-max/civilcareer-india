@@ -4,6 +4,12 @@
       "maxDuration": 15
     }
   },
+  "crons": [
+    {
+      "path": "/api/company-sync",
+      "schedule": "30 2 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/exams/:path*",
@@ -71,12 +77,6 @@
           "value": "camera=(), microphone=(), geolocation=()"
         }
       ]
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/company-sync",
-      "schedule": "30 2 * * *"
     }
   ]
 }
