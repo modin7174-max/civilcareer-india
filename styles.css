@@ -260,3 +260,56 @@
       linear-gradient(145deg,#071a3d 0%,#183873 58%,#24448f 100%);
   }
 }
+
+
+/* ============================================================
+   V0 FINAL PROPORTION POLISH
+   Slightly increases hero typography and breathing room to
+   match the visual scale of the V0 reference.
+   ============================================================ */
+
+@media(min-width:761px){
+  .hero-grid{
+    grid-template-columns:minmax(0,1fr) 340px;
+    gap:64px;
+    padding:92px 0 98px;
+  }
+
+  .hero h1{
+    font-size:62px;
+    letter-spacing:-2.9px;
+  }
+
+  .hero .lead{
+    max-width:760px;
+    font-size:20px;
+    line-height:1.55;
+  }
+
+  .hero .hero-actions{
+    margin-top:32px;
+  }
+
+  .hero-panel{
+    padding:29px;
+  }
+
+  .hero-panel blockquote{
+    font-size:30px;
+  }
+}
+
+@media(max-width:760px){
+  .hero-grid{
+    padding:60px 0 72px;
+  }
+
+  .hero h1{
+    font-size:43px;
+    letter-spacing:-1.8px;
+  }
+
+  .hero .lead{
+    font-size:17.5px;
+  }
+}
