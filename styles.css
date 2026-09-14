@@ -158,3 +158,105 @@
   .exam-detail-header{flex-direction:column}
   .auth-group-header{flex-direction:column;align-items:flex-start;gap:.25rem}
 }
+
+
+/* ============================================================
+   CIVILCAREER — V0 BLUE HERO COLOR LAYER
+   Matches the V0 reference: strong navy/blue hero background
+   while keeping the rest of the V0 visual system intact.
+   ============================================================ */
+
+.hero{
+  background:
+    radial-gradient(circle at 78% 12%, rgba(76,104,181,.30) 0, rgba(76,104,181,0) 34%),
+    linear-gradient(118deg,#071a3d 0%,#102d66 48%,#24448f 100%);
+  border-bottom:0;
+  color:#dce8f8;
+}
+
+.hero-lines{
+  background-image:
+    linear-gradient(rgba(125,165,225,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(125,165,225,.08) 1px,transparent 1px);
+  background-size:42px 42px;
+  opacity:.65;
+}
+
+.hero-lines:after{
+  border-color:rgba(150,181,232,.14);
+  box-shadow:
+    0 0 0 70px rgba(150,181,232,.035),
+    0 0 0 140px rgba(150,181,232,.025);
+}
+
+.hero h1{
+  color:#fff;
+}
+
+.hero .lead{
+  color:#c5d6ec;
+}
+
+.hero .eyebrow{
+  color:#f2a900;
+}
+
+.hero .scope{
+  color:#9fb8d5;
+}
+
+.hero .scope i{
+  background:#e1a72a;
+}
+
+.hero-panel{
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.22);
+  border-left:3px solid #f2a900;
+  box-shadow:0 18px 45px rgba(0,0,0,.14);
+  backdrop-filter:blur(8px);
+}
+
+.hero-panel .panel-label{
+  color:#f2a900;
+}
+
+.hero-panel blockquote{
+  color:#fff;
+}
+
+.hero-panel p{
+  color:#d0ddef;
+}
+
+.hero .btn.primary{
+  background:#2864d7;
+  color:#fff;
+  border-color:#2864d7;
+}
+
+.hero .btn.primary:hover{
+  background:#3473eb;
+}
+
+.hero .btn.secondary{
+  background:#fff;
+  color:#10213e;
+  border-color:#fff;
+}
+
+.hero .btn.secondary:hover{
+  background:#f3f6fa;
+}
+
+.hero .search-wrap{
+  color:var(--text);
+}
+
+@media(max-width:760px){
+  .hero{
+    background:
+      radial-gradient(circle at 85% 8%,rgba(76,104,181,.28) 0,rgba(76,104,181,0) 38%),
+      linear-gradient(145deg,#071a3d 0%,#183873 58%,#24448f 100%);
+  }
+}
