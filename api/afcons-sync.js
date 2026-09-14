@@ -35,16 +35,23 @@ function htmlToText(html) {
   );
 }
 
-function extractLabel(text, label) {
+function extractAfconsField(text, label, nextLabels = []) {
+  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const nextPart = nextLabels.length
+    ? `(?=\\s+(?:${nextLabels
+        .map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .join('|')})\\s*(?::|$))`
+    : '$';
+
   const re = new RegExp(
-    `${label}\\s*:\\s*(.*?)(?=\\s+(?:Date|Location|Company|Roles and Responsibilities|Education Qualifications|Experience Range|Work Environment)\\s*:|$)`,
+    `${escapedLabel}\\s*:\\s*(.*?)(?:${nextPart})`,
     'i'
   );
 
   const m = text.match(re);
   return clean(m ? m[1] : '');
 }
-
 function extractJobLinks(html) {
   const links = [];
   const seen = new Set();
