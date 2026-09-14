@@ -45,7 +45,7 @@ function extractAfconsField(text, label, nextLabels = []) {
     : '$';
 
   const re = new RegExp(
-    `${escapedLabel}\\s*:\\s*(.*?)(?:${nextPart})`,
+    `${escapedLabel}\\s*(?::\\s*|\\s+)(.*?)(?:${nextPart})`,
     'i'
   );
 
@@ -127,8 +127,10 @@ const qualification =
 const experience_level =
   extractAfconsField(text, 'Experience Range', [
     'Work Environment'
+  ]) ||
+  extractAfconsField(text, 'Experience Range', [
+    'Apply now'
   ]);
-
   return {
     source_url: url,
     application_url: url,
