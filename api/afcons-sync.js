@@ -28,6 +28,7 @@ function getMeta(html, name) {
   );
 
   const m = html.match(re);
+
   return m ? clean(m[1]) : '';
 }
 
@@ -130,18 +131,13 @@ async function fetchJob(url) {
     locationMatch ? locationMatch[1] : ''
   );
 
-  const posted_date =
-    extractAfconsField(text, 'Date', [
-      'Location'
-    ]);
-
   const qualification =
     extractAfconsField(text, 'Educational Essential', [
       'Educational Desirable'
     ]);
 
   const experienceMatch = text.match(
-    /Experience Range\s*(.*?)(?=\s+Work Environment\b|$)/i
+    /Experience Range\s*:\s*(.*?)(?=\s+Work Environment\b|$)/i
   );
 
   const experience_level = clean(
@@ -262,12 +258,14 @@ module.exports = async function handler(req, res) {
         const qualification =
           String(job.qualification || '').toLowerCase();
 
+        /*
+         * Civil / construction related job titles.
+         */
         const civilTitle = [
           'civil',
           'structural',
           'construction',
           'site engineer',
-          'quantity survey',
           'planner',
           'planning engineer',
           'bridge',
@@ -277,16 +275,28 @@ module.exports = async function handler(req, res) {
           'water',
           'infrastructure',
           'tunnel',
-          'geotechnical'
+          'geotechnical',
+          'quantity survey'
         ];
 
+        /*
+         * Civil-related qualifications.
+         *
+         * Includes mixed Civil/Mech qualifications because
+         * Civil is explicitly present.
+         */
         const civilQualification = [
           'civil engineering',
           'civil engineer',
           'structural engineering',
-          'civil/structural'
+          'civil/structural',
+          'civil/mech engineering',
+          'civil / mech engineering'
         ];
 
+        /*
+         * Clearly non-civil roles.
+         */
         const excludedTitle = [
           'p&a',
           'personnel',
@@ -320,9 +330,24 @@ module.exports = async function handler(req, res) {
             qualification.includes(keyword)
           );
 
+        /*
+         * Special rule:
+         *
+         * Quantity Survey jobs must have a Civil-related
+         * qualification.
+         *
+         * This prevents a Mechanical-only Quantity Survey
+         * Manager from entering CivilCareer.
+         */
+        const isQuantitySurvey =
+          title.includes('quantity survey');
+
         const isCivilJob =
           !isExcluded &&
-          (hasCivilTitle || hasCivilQualification);
+          (
+            hasCivilQualification ||
+            (!isQuantitySurvey && hasCivilTitle)
+          );
 
         if (!isCivilJob) {
           continue;
@@ -340,6 +365,7 @@ module.exports = async function handler(req, res) {
 
     let inserted = 0;
     let skipped_existing = 0;
+
     const insert_errors = [];
 
     for (const job of jobs) {
@@ -353,6 +379,7 @@ module.exports = async function handler(req, res) {
         }
 
         await insertJob(job);
+
         inserted++;
 
       } catch (error) {
