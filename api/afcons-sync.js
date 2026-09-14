@@ -1,6 +1,12 @@
 const AFCONS_LIST_URL =
   'https://careers.afcons.com/search/?createNewAlert=no&q=&locationsearch=';
 
+const SUPA = process.env.SUPABASE_URL;
+
+const SUPA_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY;
+
 function clean(value = '') {
   return String(value)
     .replace(/<[^>]+>/g, ' ')
@@ -36,11 +42,16 @@ function htmlToText(html) {
 }
 
 function extractAfconsField(text, label, nextLabels = []) {
-  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escapedLabel = label.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    '\\$&'
+  );
 
   const nextPart = nextLabels.length
     ? `(?=\\s+(?:${nextLabels
-        .map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .map(x =>
+          x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        )
         .join('|')})\\s*(?::|$))`
     : '$';
 
@@ -50,8 +61,10 @@ function extractAfconsField(text, label, nextLabels = []) {
   );
 
   const m = text.match(re);
+
   return clean(m ? m[1] : '');
 }
+
 function extractJobLinks(html) {
   const links = [];
   const seen = new Set();
@@ -103,40 +116,38 @@ async function fetchJob(url) {
     getMeta(html, 'twitter:title') ||
     'Untitled vacancy';
 
- const company =
-  extractAfconsField(text, 'Company', [
-    'Roles and Responsibilities'
-  ]) ||
-  'Afcons Infrastructure Limited';
+  const company =
+    extractAfconsField(text, 'Company', [
+      'Roles and Responsibilities'
+    ]) ||
+    'Afcons Infrastructure Limited';
 
-const locationMatch = text.match(
-  /(?:Date\s*:\s*[^:]+?\s+)?Location\s*:\s*(.*?)(?=\s+Company\s*:)/i
-);
+  const locationMatch = text.match(
+    /Location\s*:\s*(.*?)(?=\s+Company\s*:)/i
+  );
 
-const location = clean(
-  locationMatch ? locationMatch[1] : ''
-);
+  const location = clean(
+    locationMatch ? locationMatch[1] : ''
+  );
 
-const posted_date =
-  extractAfconsField(text, 'Date', [
-    'Location'
-  ]);
+  const posted_date =
+    extractAfconsField(text, 'Date', [
+      'Location'
+    ]);
 
-const qualification =
-  extractAfconsField(text, 'Educational Essential', [
-    'Educational Desirable'
-  ]);
+  const qualification =
+    extractAfconsField(text, 'Educational Essential', [
+      'Educational Desirable'
+    ]);
 
-const experienceMatch = text.match(
-  /Experience Range\s*(.*?)(?=\s+Work Environment\b|$)/i
-);
+  const experienceMatch = text.match(
+    /Experience Range\s*(.*?)(?=\s+Work Environment\b|$)/i
+  );
 
-const experience_level = clean(
-  experienceMatch ? experienceMatch[1] : ''
-);
-  extractAfconsField(text, 'Experience Range', [
-    'Apply now'
-  ]);
+  const experience_level = clean(
+    experienceMatch ? experienceMatch[1] : ''
+  );
+
   return {
     source_url: url,
     application_url: url,
@@ -153,11 +164,69 @@ const experience_level = clean(
   };
 }
 
+async function jobAlreadyExists(sourceUrl) {
+  const url =
+    `${SUPA}/rest/v1/jobs` +
+    `?source_url=eq.${encodeURIComponent(sourceUrl)}` +
+    `&select=id` +
+    `&limit=1`;
+
+  const response = await fetch(url, {
+    headers: {
+      apikey: SUPA_KEY,
+      Authorization: `Bearer ${SUPA_KEY}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Supabase duplicate check failed: ${response.status}`
+    );
+  }
+
+  const rows = await response.json();
+
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+async function insertJob(job) {
+  const response = await fetch(
+    `${SUPA}/rest/v1/jobs`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: SUPA_KEY,
+        Authorization: `Bearer ${SUPA_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify(job)
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+
+    throw new Error(
+      `Supabase insert failed: ${response.status} ${errorText}`
+    );
+  }
+
+  return response.json();
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({
       success: false,
       error: 'Method not allowed'
+    });
+  }
+
+  if (!SUPA || !SUPA_KEY) {
+    return res.status(500).json({
+      success: false,
+      error: 'Supabase environment variables are missing'
     });
   }
 
@@ -182,79 +251,115 @@ module.exports = async function handler(req, res) {
     const links = extractJobLinks(html);
 
     const jobs = [];
+    const errors = [];
 
     for (const url of links) {
       try {
         const job = await fetchJob(url);
 
-const title = String(job.role || '').toLowerCase();
-const qualification = String(job.qualification || '').toLowerCase();
+        const title =
+          String(job.role || '').toLowerCase();
 
-const civilTitle = [
-  'civil',
-  'structural',
-  'construction',
-  'site engineer',
-  'quantity survey',
-  'planner',
-  'planning engineer',
-  'bridge',
-  'metro',
-  'highway',
-  'road',
-  'water',
-  'infrastructure',
-  'tunnel',
-  'geotechnical'
-];
+        const qualification =
+          String(job.qualification || '').toLowerCase();
 
-const civilQualification = [
-  'civil engineering',
-  'civil engineer',
-  'structural engineering',
-  'civil/structural'
-];
+        const civilTitle = [
+          'civil',
+          'structural',
+          'construction',
+          'site engineer',
+          'quantity survey',
+          'planner',
+          'planning engineer',
+          'bridge',
+          'metro',
+          'highway',
+          'road',
+          'water',
+          'infrastructure',
+          'tunnel',
+          'geotechnical'
+        ];
 
-const excludedTitle = [
-  'p&a',
-  'personnel',
-  'admin',
-  'talent acquisition',
-  'hr',
-  'human resource',
-  'safety engineer',
-  'instrumentation',
-  'electrical',
-  'mechanical',
-  'finance',
-  'accounts',
-  'legal',
-  'procurement',
-  'secretarial'
-];
+        const civilQualification = [
+          'civil engineering',
+          'civil engineer',
+          'structural engineering',
+          'civil/structural'
+        ];
 
-const isExcluded = excludedTitle.some(keyword =>
-  title.includes(keyword)
-);
+        const excludedTitle = [
+          'p&a',
+          'personnel',
+          'admin',
+          'talent acquisition',
+          'hr',
+          'human resource',
+          'safety engineer',
+          'instrumentation',
+          'electrical',
+          'mechanical',
+          'finance',
+          'accounts',
+          'legal',
+          'procurement',
+          'secretarial'
+        ];
 
-const hasCivilTitle = civilTitle.some(keyword =>
-  title.includes(keyword)
-);
+        const isExcluded =
+          excludedTitle.some(keyword =>
+            title.includes(keyword)
+          );
 
-const hasCivilQualification = civilQualification.some(keyword =>
-  qualification.includes(keyword)
-);
+        const hasCivilTitle =
+          civilTitle.some(keyword =>
+            title.includes(keyword)
+          );
 
-const isCivilJob =
-  !isExcluded &&
-  (hasCivilTitle || hasCivilQualification);
+        const hasCivilQualification =
+          civilQualification.some(keyword =>
+            qualification.includes(keyword)
+          );
 
-if (isCivilJob) {
-  jobs.push(job);
-}
+        const isCivilJob =
+          !isExcluded &&
+          (hasCivilTitle || hasCivilQualification);
+
+        if (!isCivilJob) {
+          continue;
+        }
+
+        jobs.push(job);
+
       } catch (error) {
-        jobs.push({
+        errors.push({
           source_url: url,
+          error: error.message
+        });
+      }
+    }
+
+    let inserted = 0;
+    let skipped_existing = 0;
+    const insert_errors = [];
+
+    for (const job of jobs) {
+      try {
+        const exists =
+          await jobAlreadyExists(job.source_url);
+
+        if (exists) {
+          skipped_existing++;
+          continue;
+        }
+
+        await insertJob(job);
+        inserted++;
+
+      } catch (error) {
+        insert_errors.push({
+          source_url: job.source_url,
+          role: job.role,
           error: error.message
         });
       }
@@ -264,9 +369,16 @@ if (isCivilJob) {
       success: true,
       source: AFCONS_LIST_URL,
       total_found: links.length,
-      total_processed: jobs.length,
+      civil_jobs_found: jobs.length,
+      inserted,
+      skipped_existing,
+      fetch_errors: errors.length,
+      insert_errors: insert_errors.length,
+      errors,
+      insert_errors_detail: insert_errors,
       jobs
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
