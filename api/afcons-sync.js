@@ -1,14 +1,5 @@
-const AFCONS_URL =
-  'https://careers.afcons.com/search/?createNewAlert=no&q=&locationsearch=';
-
-function absoluteUrl(href) {
-  if (!href) return '';
-  try {
-    return new URL(href, AFCONS_URL).href;
-  } catch {
-    return '';
-  }
-}
+const AFCONS_JOB_URL =
+  'https://careers.afcons.com/job/India-SITE-ENGINEER-URBAN-Any/58071744/';
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -16,59 +7,27 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(AFCONS_URL);
+    const response = await fetch(AFCONS_JOB_URL);
 
     if (!response.ok) {
       return res.status(502).json({
-        error: 'Could not fetch Afcons jobs page',
+        error: 'Could not fetch Afcons job page',
         status: response.status
       });
     }
 
     const html = await response.text();
 
-    const jobs = [];
-    const seen = new Set();
-
-    const linkRegex =
-      /<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
-
-    let match;
-
-    while ((match = linkRegex.exec(html)) !== null) {
-      const href = match[1];
-      const text = match[2]
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      const url = absoluteUrl(href);
-
-      if (
-        url &&
-        /careers\.afcons\.com\/job\//i.test(url) &&
-        text &&
-        !seen.has(url)
-      ) {
-        seen.add(url);
-
-        jobs.push({
-          title: text,
-          url
-        });
-      }
-    }
-
     return res.status(200).json({
       success: true,
-      source: AFCONS_URL,
-      total_found: jobs.length,
-      jobs: jobs.slice(0, 25)
+      source: AFCONS_JOB_URL,
+      length: html.length,
+      preview: html.slice(0, 5000)
     });
 
   } catch (error) {
     return res.status(500).json({
-      error: 'Afcons parser failed',
+      error: 'Afcons job fetch failed',
       details: error.message
     });
   }
