@@ -252,7 +252,248 @@ function updateNavCounts(){
   if($('statExams'))$('statExams').textContent=exams.length+'+';
   if($('statRes'))$('statRes').textContent=materials.length+'+';
 }
-async function loadData(){const [j,e,m]=await Promise.allSettled([api('/api/jobs'),api('/api/exams'),api('/api/materials')]);jobs=j.status==='fulfilled'?j.value.jobs||[]:[];exams=e.status==='fulfilled'?e.value.exams||[]:[];materials=m.status==='fulfilled'?m.value.materials||[]:[];renderHome();renderPrivate();renderGovernment();renderExams();renderMaterials();updateStats();updateNavCounts()}
+
+/* ═══════════════════════════════════════════════════════════
+   AI JOB AGENT — STAGE 1
+   User Profile + Job Matching + For You Feed
+═══════════════════════════════════════════════════════════ */
+
+// ── Anonymous session ID ─────────────────────────────────────────────
+function getSessionId(){
+  let id=localStorage.getItem('cc_session');
+  if(!id){id='cc_'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('cc_session',id);}
+  return id;
+}
+
+// ── User profile in memory ───────────────────────────────────────────
+let userProfile=JSON.parse(localStorage.getItem('cc_profile')||'{}');
+let userPrefs=JSON.parse(localStorage.getItem('cc_prefs')||'{}');
+let jobInteractions=JSON.parse(localStorage.getItem('cc_interactions')||'{}');
+
+function saveProfileLocal(){
+  localStorage.setItem('cc_profile',JSON.stringify(userProfile));
+  localStorage.setItem('cc_prefs',JSON.stringify(userPrefs));
+}
+
+function saveInteractionLocal(jobId,action){
+  jobInteractions[jobId]=action;
+  localStorage.setItem('cc_interactions',JSON.stringify(jobInteractions));
+}
+
+// ── AI Job Matching Score ────────────────────────────────────────────
+function matchScore(job){
+  if(!userPrefs.target_roles&&!userPrefs.preferred_locations&&!userPrefs.skills_wanted) return null;
+  let score=0,reasons=[],weaknesses=[];
+
+  // Role match (25%)
+  const targetRoles=(userPrefs.target_roles||'').toLowerCase().split(',').map(r=>r.trim()).filter(Boolean);
+  const jobRole=(job.role||'').toLowerCase();
+  if(targetRoles.length){
+    const roleMatch=targetRoles.some(r=>jobRole.includes(r)||r.includes(jobRole.split(' ')[0]));
+    if(roleMatch){score+=25;reasons.push('Role matches your target');}
+    else{const partial=targetRoles.some(r=>jobRole.split(' ').some(w=>r.includes(w)&&w.length>3));
+      if(partial){score+=12;reasons.push('Partial role match');}
+      else weaknesses.push('Role differs from target');}
+  } else score+=25;
+
+  // Skills match (25%)
+  const wantedSkills=(userPrefs.skills_wanted||userProfile.skills||'').toLowerCase().split(',').map(s=>s.trim()).filter(Boolean);
+  const jobText=(job.description||''+job.skills||''+job.qualification||'').toLowerCase();
+  if(wantedSkills.length){
+    const matched=wantedSkills.filter(s=>jobText.includes(s));
+    const skillPct=matched.length/wantedSkills.length;
+    score+=Math.round(skillPct*25);
+    if(matched.length>0)reasons.push(`${matched.length}/${wantedSkills.length} skills match`);
+    const missing=wantedSkills.filter(s=>!jobText.includes(s));
+    if(missing.length>0&&missing.length<=3)weaknesses.push('Missing: '+missing.join(', '));
+  } else score+=25;
+
+  // Location match (20%)
+  const prefLocs=(userPrefs.preferred_locations||'').toLowerCase().split(',').map(l=>l.trim()).filter(Boolean);
+  const jobLoc=(job.location||'').toLowerCase();
+  if(prefLocs.length){
+    const locMatch=prefLocs.some(l=>jobLoc.includes(l)||l.includes(jobLoc));
+    if(locMatch){score+=20;reasons.push('Location matches preference');}
+    else if(jobLoc.includes('remote')||jobLoc.includes('work from home')){score+=15;reasons.push('Remote option available');}
+    else weaknesses.push('Location differs from preference');
+  } else score+=20;
+
+  // Experience match (15%)
+  const prefExpMin=parseFloat(userPrefs.experience_min)||0;
+  const prefExpMax=parseFloat(userPrefs.experience_max)||20;
+  const expText=(job.experience_level||'').toLowerCase();
+  const expMatch=expText.match(/(\d+)/g);
+  if(expMatch){
+    const jobExpMin=parseFloat(expMatch[0])||0;
+    if(jobExpMin<=prefExpMax&&jobExpMin>=Math.max(0,prefExpMin-2)){
+      score+=15;reasons.push('Experience level fits');
+    } else weaknesses.push('Experience mismatch');
+  } else score+=15;
+
+  // Salary match (10%)
+  const prefSalMin=parseFloat(userPrefs.salary_min)||0;
+  if(prefSalMin&&job.salary_min){
+    if(parseFloat(job.salary_min)>=prefSalMin*0.85){score+=10;reasons.push('Salary meets preference');}
+    else weaknesses.push('Salary below preference');
+  } else score+=10;
+
+  // Sector match (5%)
+  const prefSector=userPrefs.sectors||'Both';
+  if(prefSector==='Both'||prefSector===job.sector||(prefSector==='Government'&&['Government','Public Sector'].includes(job.sector))){
+    score+=5;
+  }
+
+  return {score:Math.min(score,100),reasons,weaknesses};
+}
+
+// ── For You Feed ─────────────────────────────────────────────────────
+function renderForYou(){
+  const container=$('forYouJobs');
+  if(!container)return;
+  const hasProfile=userPrefs.target_roles||userPrefs.preferred_locations;
+  if(!hasProfile){
+    container.innerHTML=`<div class="foryou-empty">
+      <div class="foryou-icon">🎯</div>
+      <h3>Set up your job profile</h3>
+      <p>Tell us what you're looking for and we'll find the best matches for you.</p>
+      <button class="btn primary" onclick="openProfileSetup()">Set Up Profile — Free</button>
+    </div>`;
+    return;
+  }
+
+  // Score all jobs
+  const scored=jobs
+    .filter(j=>!jobInteractions[j.id]||jobInteractions[j.id]==='saved')
+    .map(j=>({...j,_match:matchScore(j)}))
+    .filter(j=>j._match&&j._match.score>=50)
+    .sort((a,b)=>b._match.score-a._match.score)
+    .slice(0,20);
+
+  if(!scored.length){
+    container.innerHTML=`<div class="foryou-empty"><p>No strong matches yet. Add more jobs or update your profile.</p><button class="btn primary" onclick="openProfileSetup()">Update Profile</button></div>`;
+    return;
+  }
+
+  container.innerHTML=scored.map(j=>matchJobCard(j,j._match)).join('');
+  bindCards();
+}
+
+function matchJobCard(j,match){
+  const color=match.score>=80?'#10b981':match.score>=60?'#f59e0b':'#6b7280';
+  const saved=jobInteractions[j.id]==='saved';
+  const ignored=jobInteractions[j.id]==='ignored';
+  return `<article class="job-card match-card" style="border-top:3px solid ${color}">
+    <div class="match-score-row">
+      <span class="match-pct" style="color:${color}">${match.score}% Match</span>
+      <span class="match-label">${match.score>=80?'🔥 Strong match':match.score>=60?'✅ Good match':'🔶 Partial match'}</span>
+    </div>
+    <h3>${esc(j.role||'Opportunity')}</h3>
+    <div class="organization">${esc(j.company||'Organization')}</div>
+    ${j.salary?`<div class="salary-badge">💰 ${esc(j.salary)}</div>`:''}
+    <div class="card-meta">
+      ${j.location?`<span>📍 ${esc(j.location)}</span>`:''}
+      ${j.experience_level?`<span>⏱ ${esc(j.experience_level)}</span>`:''}
+    </div>
+    <div class="match-reasons">
+      ${match.reasons.slice(0,3).map(r=>`<span class="reason-tag">✓ ${r}</span>`).join('')}
+      ${match.weaknesses.slice(0,1).map(w=>`<span class="reason-tag weak">⚠ ${w}</span>`).join('')}
+    </div>
+    <div class="card-actions">
+      <button data-job="${j.id}">View Details</button>
+      <button class="btn-save ${saved?'saved':''}" onclick="trackJob('${j.id}','${saved?'unsave':'saved'}',this)">${saved?'★ Saved':'☆ Save'}</button>
+      <button class="btn-apply" onclick="trackJob('${j.id}','applied',this);window.open('${esc(j.apply_url||j.source_url||'')}','_blank')">Apply →</button>
+      <button class="btn-ignore" onclick="trackJob('${j.id}','ignored',this)">✕</button>
+    </div>
+  </article>`;
+}
+
+function trackJob(jobId,action,btn){
+  saveInteractionLocal(jobId,action);
+  if(action==='ignored'){btn.closest('article').remove();toast('Job hidden. Refresh For You to update.');}
+  else if(action==='saved'){btn.textContent='★ Saved';btn.classList.add('saved');toast('Job saved!');}
+  else if(action==='applied'){toast('Marked as applied!');}
+  else if(action==='unsave'){btn.textContent='☆ Save';btn.classList.remove('saved');saveInteractionLocal(jobId,'');toast('Bookmark removed.');}
+}
+
+// ── Profile Setup Modal ──────────────────────────────────────────────
+function openProfileSetup(){
+  const prefs=userPrefs,prof=userProfile;
+  $('editorTitle').textContent='Your Job Profile';
+  $('editorBody').innerHTML=`<div class="profile-setup">
+    <div class="profile-tabs">
+      <button class="ptab active" onclick="showPTab('basics',this)">👤 About Me</button>
+      <button class="ptab" onclick="showPTab('prefs',this)">🎯 Job Preferences</button>
+    </div>
+
+    <div id="ptab-basics" class="ptab-content">
+      <label>Your name<input id="pName" value="${esc(prof.name||'')}" placeholder="e.g. Modin Kumar"></label>
+      <label>Current role<input id="pRole" value="${esc(prof.current_role||'')}" placeholder="e.g. Planning Engineer"></label>
+      <label>Years of experience<input id="pExp" type="number" value="${prof.experience_years||''}" placeholder="e.g. 5"></label>
+      <label>Education<input id="pEdu" value="${esc(prof.education||'')}" placeholder="e.g. B.E. Civil Engineering"></label>
+      <label>Your skills (comma separated)<textarea id="pSkills" placeholder="Primavera P6, AutoCAD, MS Project, BIM, Revit">${esc(prof.skills||'')}</textarea></label>
+    </div>
+
+    <div id="ptab-prefs" class="ptab-content" style="display:none">
+      <label>Target job roles (comma separated)<input id="pTargetRoles" value="${esc(prefs.target_roles||'')}" placeholder="Planning Engineer, Project Controls Engineer"></label>
+      <label>Skills I want to match<input id="pSkillsWanted" value="${esc(prefs.skills_wanted||'')}" placeholder="Primavera, AutoCAD, MS Project"></label>
+      <label>Preferred locations (comma separated)<input id="pLocations" value="${esc(prefs.preferred_locations||'')}" placeholder="Bengaluru, Hyderabad, Gulf"></label>
+      <label>Experience range (years)
+        <div style="display:flex;gap:.5rem">
+          <input id="pExpMin" type="number" value="${prefs.experience_min||''}" placeholder="Min (e.g. 2)">
+          <input id="pExpMax" type="number" value="${prefs.experience_max||''}" placeholder="Max (e.g. 8)">
+        </div>
+      </label>
+      <label>Minimum salary (₹/year)<input id="pSalMin" type="number" value="${prefs.salary_min||''}" placeholder="e.g. 500000"></label>
+      <label>Job sector
+        <select id="pSector">
+          <option ${(prefs.sectors||'Both')==='Both'?'selected':''}>Both</option>
+          <option ${prefs.sectors==='Private'?'selected':''}>Private</option>
+          <option ${prefs.sectors==='Government'?'selected':''}>Government</option>
+        </select>
+      </label>
+      <label>Keywords to exclude<input id="pExclude" value="${esc(prefs.keywords_exclude||'')}" placeholder="e.g. intern, fresher"></label>
+    </div>
+
+    <button class="btn primary wide" onclick="saveProfile()">Save Profile & Find Matches</button>
+  </div>`;
+  openEditor();
+}
+
+function showPTab(tab,btn){
+  $$('.ptab-content').forEach(el=>el.style.display='none');
+  $$('.ptab').forEach(b=>b.classList.remove('active'));
+  $('ptab-'+tab).style.display='block';
+  btn.classList.add('active');
+}
+
+function saveProfile(){
+  userProfile={
+    ...userProfile,
+    name:$('pName')?.value||'',
+    current_role:$('pRole')?.value||'',
+    experience_years:parseFloat($('pExp')?.value)||null,
+    education:$('pEdu')?.value||'',
+    skills:$('pSkills')?.value||''
+  };
+  userPrefs={
+    ...userPrefs,
+    target_roles:$('pTargetRoles')?.value||'',
+    skills_wanted:$('pSkillsWanted')?.value||'',
+    preferred_locations:$('pLocations')?.value||'',
+    experience_min:parseFloat($('pExpMin')?.value)||null,
+    experience_max:parseFloat($('pExpMax')?.value)||null,
+    salary_min:parseFloat($('pSalMin')?.value)||null,
+    sectors:$('pSector')?.value||'Both',
+    keywords_exclude:$('pExclude')?.value||''
+  };
+  saveProfileLocal();
+  $('editorDialog').close();
+  toast('Profile saved! Finding your matches…');
+  navigate('foryou');
+  renderForYou();
+}
+
+async function loadData(){const [j,e,m]=await Promise.allSettled([api('/api/jobs'),api('/api/exams'),api('/api/materials')]);jobs=j.status==='fulfilled'?j.value.jobs||[]:[];exams=e.status==='fulfilled'?e.value.exams||[]:[];materials=m.status==='fulfilled'?m.value.materials||[]:[];renderHome();renderPrivate();renderGovernment();renderExams();renderMaterials();updateStats();updateNavCounts();renderForYou()}
 function formObject(form){return Object.fromEntries(new FormData(form).entries())}function wireForm(id,url,transform=x=>x){const f=$(id);f.onsubmit=async e=>{e.preventDefault();const st=f.querySelector('.form-status');st.className='form-status show';st.textContent='Submitting securely…';try{let data=formObject(f);data=transform(data);await api(url,{method:'POST',body:JSON.stringify(data)});st.className='form-status show success';st.textContent='Thank you. Your submission is pending administrator review.';f.reset()}catch(err){st.className='form-status show error';st.textContent=err.message}}}
 function search(q,loc=''){q=q.toLowerCase();loc=loc.toLowerCase();const results=[];jobs.forEach(j=>{if((!q||[j.role,j.company,j.description,j.discipline,j.qualification].join(' ').toLowerCase().includes(q))&&(!loc||String(j.location).toLowerCase().includes(loc)))results.push({type:['Government','Public Sector'].includes(j.sector)?'Government Job':'Civil Job',title:j.role,sub:j.company||j.location,action:`data-job="${j.id}"`})});exams.forEach(x=>{if(!q||[x.code,x.title_en,x.authority,x.post_names,x.notification_number,x.overview].join(' ').toLowerCase().includes(q))results.push({type:'Exam',title:`${x.code} — ${x.title_en}`,sub:x.authority,action:`data-exam="${x.id}"`})});materials.forEach(m=>{if(!q||[m.title_en,m.category,m.exam_code].join(' ').toLowerCase().includes(q))results.push({type:'Resource',title:m.title_en,sub:m.category,action:`data-material-id="${m.id}"`})});$('searchSummary').textContent=results.length?`${results.length} result${results.length===1?'':'s'} for “${q||'all content'}”`:'No matching results.';$('searchResults').innerHTML=results.length?results.slice(0,60).map(x=>`<article class="job-card"><span class="pill">${esc(x.type)}</span><h3>${esc(x.title)}</h3><p>${esc(x.sub||'')}</p><div class="card-actions"><button ${x.action}>View Details</button></div></article>`).join(''):empty('No results found','Try a different keyword, department or location.');bindCards();navigate('search');track('search','universal')}
 async function showAdmin(){adminKey=sessionStorage.getItem('cc_admin')||'';$('adminGate').hidden=!!adminKey;$('adminDashboard').hidden=!adminKey;if(adminKey)await loadAdmin()}
@@ -398,7 +639,7 @@ function materialEditor(m={}){$('editorTitle').textContent=m.id?'Edit material':
     <label>PDF direct URL (if you have direct link)<input type="url" name="pdf_url" value="${val(m.pdf_url)}" placeholder="https://example.com/file.pdf"></label>
     <label>Subject / Topic<input name="subject" value="${val(m.subject)}" placeholder="e.g. Structural Engineering, KPSC Syllabus"></label><label>Preview URL<input type="url" name="preview_url" value="${val(m.preview_url)}"></label><label>Page count<input type="number" name="page_count" value="${val(m.page_count)}"></label><button class="btn primary">Save material</button></form>`;openEditor();$('materialEdit').onsubmit=async e=>{e.preventDefault();const d=formObject(e.target);d.access_type='Free';if(m.id)d.id=m.id;await api('/api/materials',{method:m.id?'PATCH':'POST',key:adminKey,body:JSON.stringify(d)});$('editorDialog').close();toast('Material saved.');await loadData();loadAdmin()}}
 function openEditor(){$('editorDialog').showModal()}
-$$('.route').forEach(a=>a.onclick=e=>{e.preventDefault();navigate(a.dataset.route)});onpopstate=()=>navigate(pathRoute[location.pathname]||'home',false);$('menuBtn').onclick=()=>{const n=$('mainNav'),open=n.classList.toggle('open');$('menuBtn').setAttribute('aria-expanded',open)};$('language').onclick=()=>{lang=lang==='en'?'kn':'en';localStorage.setItem('cc_lang',lang);translate();renderHome();renderPrivate();renderGovernment();renderExams();renderMaterials();updateStats();updateNavCounts()};$$('[data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());$('searchOpen').onclick=()=>{$('globalQuery').focus();scrollTo({top:document.querySelector('.search-wrap').offsetTop-90,behavior:'smooth'})};
+$$('.route').forEach(a=>a.onclick=e=>{e.preventDefault();navigate(a.dataset.route)});onpopstate=()=>navigate(pathRoute[location.pathname]||'home',false);$('menuBtn').onclick=()=>{const n=$('mainNav'),open=n.classList.toggle('open');$('menuBtn').setAttribute('aria-expanded',open)};$('language').onclick=()=>{lang=lang==='en'?'kn':'en';localStorage.setItem('cc_lang',lang);translate();renderHome();renderPrivate();renderGovernment();renderExams();renderMaterials();updateStats();updateNavCounts();renderForYou()};$$('[data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());$('searchOpen').onclick=()=>{$('globalQuery').focus();scrollTo({top:document.querySelector('.search-wrap').offsetTop-90,behavior:'smooth'})};
 const sug=['Civil Engineer','Site Engineer','Planning Engineer','Quantity Surveyor','Junior Engineer','KPSC','KAS','Karnataka Government Jobs','Bengaluru','Mysuru'];$('globalQuery').oninput=e=>{const q=e.target.value.toLowerCase();const a=sug.filter(x=>x.toLowerCase().includes(q)).slice(0,5);$('suggestions').innerHTML=a.map(x=>`<button type="button">${x}</button>`).join('');$('suggestions').classList.toggle('show',q.length>0&&a.length>0);$$('#suggestions button').forEach(b=>b.onclick=()=>{$('globalQuery').value=b.textContent;$('suggestions').classList.remove('show')})};$('smartSearch').onsubmit=e=>{e.preventDefault();$('suggestions').classList.remove('show');search($('globalQuery').value,$('globalLocation').value)};
 ['privateRole','privateExperience','privateType','privateSort'].forEach(id=>$(id).onchange=renderPrivate);['privateLocation','privateQualification'].forEach(id=>$(id).oninput=renderPrivate);['govStatus','govSort'].forEach(id=>$(id)&&$(id).addEventListener('change',renderGovernment));
 $('privateSort')&&$('privateSort').addEventListener('change',renderPrivate);
