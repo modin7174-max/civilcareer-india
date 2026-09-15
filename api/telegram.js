@@ -10,7 +10,7 @@ module.exports = async function handler(req, res) {
   if (key !== process.env.OWNER_KEY) return res.status(401).json({ error: 'Unauthorized' });
 
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const channel = process.env.TELEGRAM_CHANNEL_ID || '@CivilCareerIndia';
+  const channel = process.env.TELEGRAM_CHANNEL_ID || '@CivilCareerIndiaJobs';
 
   if (!token) return res.status(400).json({ error: 'Telegram bot not configured' });
 
@@ -41,7 +41,7 @@ module.exports = async function handler(req, res) {
     ``,
     `⚠️ _Never pay for a job. Always verify the official notification._`,
     ``,
-    `📢 @CivilCareerIndia`
+    `📢 @CivilCareerIndiaJobs`
   ].filter(Boolean).join('\n');
 
   try {
