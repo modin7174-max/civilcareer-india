@@ -359,7 +359,11 @@ function jobEditor(j={}){
     try{
       await api('/api/jobs',{method:j.id?'PATCH':'POST',key:adminKey,body:JSON.stringify(d)});
       if(j._submission)await api('/api/employer-submissions',{method:'PATCH',key:adminKey,body:JSON.stringify({id:j._submission,status:'Approved'})});
-      $('editorDialog').close();toast('Opportunity saved.');
+      // Auto-post to Telegram for NEW jobs only (not edits)
+      if(!j.id){
+        api('/api/telegram',{method:'POST',key:adminKey,body:JSON.stringify({job:d})}).catch(()=>{});
+      }
+      $('editorDialog').close();toast('Opportunity saved.'+((!j.id)?' Posting to Telegram…':''));
       await loadData();loadAdmin();
     }catch(err){toast(err.message)}
   }
