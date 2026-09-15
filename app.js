@@ -385,8 +385,13 @@ function jobEditor(j={}){
     try{
       await api('/api/jobs',{method:j.id?'PATCH':'POST',key:adminKey,body:JSON.stringify(d)});
       if(j._submission)await api('/api/employer-submissions',{method:'PATCH',key:adminKey,body:JSON.stringify({id:j._submission,status:'Approved'})});
-      $('editorDialog').close();toast('Opportunity saved.');
-      await loadData();loadAdmin();
+      $('editorDialog').close();
+toast('Opportunity saved.');
+if(!j.id&&d.published){
+  fetch('/api/telegram',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({job:d})}).catch(()=>{});
+}
+await loadData();
+loadAdmin();
     }catch(err){toast(err.message)}
   }
 }
