@@ -1,50 +1,68 @@
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).end();
+/**
+ * CivilCareer — Telegram Auto-Post API
+ * Call this after saving a new job to auto-post to Telegram channel
+ * Env vars needed: TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID
+ */
+module.exports = async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { job } = req.body;
+  const key = req.headers['x-owner-key'] || '';
+  if (key !== process.env.OWNER_KEY) return res.status(401).json({ error: 'Unauthorized' });
+
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHANNEL_ID;
+  const channel = process.env.TELEGRAM_CHANNEL_ID || '@CivilCareerIndia';
 
-  if (!token || !chatId || !job) {
-    return res.status(400).json({ error: 'Missing config or job data' });
-  }
+  if (!token) return res.status(400).json({ error: 'Telegram bot not configured' });
 
-  const isGovt = ['Government', 'Public Sector'].includes(job.sector);
-  const emoji = isGovt ? '🏛' : '🏗';
-  const deadline = job.deadline
-    ? `\n⏳ *Last Date:* ${new Date(job.deadline + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
-    : '';
-  const salary   = job.salary         ? `\n💰 *Salary:* ${job.salary}`               : '';
-  const vac      = job.vacancy_count   ? `\n📋 *Vacancies:* ${job.vacancy_count}`      : '';
-  const qual     = job.qualification   ? `\n🎓 *Qualification:* ${job.qualification}`  : '';
-  const exp      = job.experience_level? `\n🧑‍💼 *Experience:* ${job.experience_level}` : '';
-  const loc      = job.location        ? job.location : 'Karnataka';
+  let body = req.body || {};
+  if (typeof body === 'string') { try { body = JSON.parse(body); } catch(e) { body = {}; } }
 
-  const text =
-    `${emoji} *New ${isGovt ? 'Govt' : 'Civil'} Job Alert\\!*\n\n` +
-    `*${(job.role || 'Opportunity').replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&')}*\n` +
-    `🏢 ${(job.company || job.recruitment_authority || 'See official source').replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&')}\n` +
-    `📍 ${loc.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&')}` +
-    salary + vac + qual + exp + deadline +
-    `\n\n🔗 [View & Apply](https://civilcareer-india-two.vercel.app/${isGovt ? 'government-jobs' : 'private-jobs'})` +
-    `\n\n_Never pay for a job\\. Always verify the official notification\\._`;
+  const { job } = body;
+  if (!job) return res.status(400).json({ error: 'No job provided' });
+
+  const closed = job.deadline && new Date(job.deadline + 'T23:59:59') < new Date();
+  const daysLeft = job.deadline && !closed
+    ? Math.ceil((new Date(job.deadline + 'T23:59:59') - new Date()) / 86400000)
+    : null;
+
+  const msg = [
+    `🆕 *New Job Alert — CivilCareer*`,
+    ``,
+    `*${job.role || 'Civil Engineering Opportunity'}*`,
+    `🏢 ${job.company || 'Organization'}`,
+    job.location ? `📍 ${job.location}` : null,
+    job.salary ? `💰 ${job.salary}` : null,
+    job.qualification ? `🎓 ${job.qualification}` : null,
+    daysLeft !== null ? `⏰ Deadline: ${job.deadline} (${daysLeft}d left)` : null,
+    ``,
+    job.source_url || job.apply_url
+      ? `🔗 [View & Apply](${job.apply_url || job.source_url})`
+      : `🔗 [Browse Jobs](https://civilcareer-india-two.vercel.app/private-jobs)`,
+    ``,
+    `⚠️ _Never pay for a job. Always verify the official notification._`,
+    ``,
+    `📢 @CivilCareerIndia`
+  ].filter(Boolean).join('\n');
 
   try {
     const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: 'MarkdownV2',
+        chat_id: channel,
+        text: msg,
+        parse_mode: 'Markdown',
         disable_web_page_preview: false
       })
     });
 
-    const data = await r.json();
-    if (!data.ok) return res.status(500).json({ error: data.description });
-    return res.status(200).json({ success: true, message_id: data.result.message_id });
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
+    if (!r.ok) {
+      const e = await r.text();
+      return res.status(500).json({ error: 'Telegram send failed', detail: e });
+    }
+
+    return res.status(200).json({ success: true, message: 'Posted to Telegram' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };
