@@ -334,3 +334,16 @@
   width: 100%;
   box-sizing: border-box;
 }
+.page-hero .container,
+.page-hero .container * {
+  overflow: visible !important;
+}
+
+section.page {
+  overflow: visible !important;
+}
+
+.container {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
