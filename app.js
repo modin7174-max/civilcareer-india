@@ -361,9 +361,16 @@ function jobEditor(j={}){
       if(j._submission)await api('/api/employer-submissions',{method:'PATCH',key:adminKey,body:JSON.stringify({id:j._submission,status:'Approved'})});
       // Auto-post to Telegram for NEW jobs only (not edits)
       if(!j.id){
-        api('/api/telegram',{method:'POST',key:adminKey,body:JSON.stringify({job:d})}).catch(()=>{});
+        try{
+          const tgRes=await api('/api/telegram',{method:'POST',key:adminKey,body:JSON.stringify({job:d})});
+          toast('✅ Job saved and posted to Telegram!');
+        }catch(tgErr){
+          toast('✅ Job saved. Telegram error: '+tgErr.message);
+          console.error('Telegram error:',tgErr);
+        }
+      } else {
+        toast('Opportunity updated.');
       }
-      $('editorDialog').close();toast('Opportunity saved.'+((!j.id)?' Posting to Telegram…':''));
       await loadData();loadAdmin();
     }catch(err){toast(err.message)}
   }
