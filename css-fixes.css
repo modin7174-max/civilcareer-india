@@ -1,0 +1,336 @@
+/* ============================================================
+   CIVILCAREER CSS FIXES — Append these at the BOTTOM of styles.css
+   Fixes: mobile nav overlap, stats/search overlap
+   ============================================================ */
+
+/* ── Fix 1: Stats bar — move inside hero, prevent search overlap ── */
+#homeStats {
+  position: relative;
+  z-index: 2;
+  padding: 1.25rem 1.5rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Search wrap sits BELOW hero with clear separation */
+.search-wrap {
+  position: relative;
+  z-index: 5;
+  background: transparent;
+  padding: 1.25rem 0 0.5rem;
+  margin-top: 0;
+}
+
+/* ── Fix 2: Mobile nav — full screen overlay, not a white box ── */
+@media (max-width: 768px) {
+  #mainNav {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(11, 31, 58, 0.98);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    z-index: 999;
+    padding: 2rem;
+    backdrop-filter: blur(8px);
+    overflow-y: auto;
+  }
+  #mainNav.open {
+    display: flex;
+  }
+  #mainNav a {
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 12px 28px;
+    border-radius: 10px;
+    color: #9db3d0;
+    width: 100%;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03);
+  }
+  #mainNav a.active,
+  #mainNav a:hover {
+    background: rgba(201, 151, 60, 0.12);
+    color: #c9973c;
+    border-color: rgba(201, 151, 60, 0.2);
+  }
+
+  /* Close button inside nav overlay */
+  #mainNav::before {
+    content: '×';
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    font-size: 2rem;
+    color: #9db3d0;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  /* Hide nav tools on mobile */
+  .nav-tools {
+    display: none;
+  }
+
+  /* Show menu button */
+  .menu-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    margin-left: auto;
+    z-index: 1001;
+  }
+  .menu-btn i {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #ffffff;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+
+  /* Stats smaller on mobile */
+  #homeStats > div {
+    min-width: 70px;
+    padding: 8px 10px;
+  }
+  #homeStats > div > div:first-child {
+    font-size: 1.3rem;
+  }
+  #homeStats > div > div:last-child {
+    font-size: 0.6rem;
+  }
+
+  /* Hero padding fix */
+  .hero {
+    padding: 1.75rem 0 1rem;
+  }
+  .hero h1 {
+    font-size: 1.65rem;
+  }
+  .hero-panel {
+    display: none;
+  }
+
+  /* Page hero fix — no text cutting on inner pages */
+  .page-hero {
+    padding: 2rem 0 1.5rem;
+    overflow: hidden;
+  }
+  .page-hero .container {
+    padding: 0 1rem;
+    overflow: visible;
+    width: 100%;
+  }
+  .page-hero h1 {
+    font-size: 1.4rem;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  /* Listing layout — stack on mobile */
+  .listing-layout {
+    grid-template-columns: 1fr;
+  }
+  .filters {
+    display: none;
+  }
+  .filters.open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    overflow-y: auto;
+    border-radius: 0;
+  }
+  .mobile-filter-btn {
+    display: inline-flex;
+  }
+
+  /* Cards full width */
+  .cards.three {
+    grid-template-columns: 1fr;
+  }
+
+  /* Search bar stacked */
+  .smart-search {
+    flex-direction: column;
+  }
+  .smart-search label {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .smart-search .btn {
+    border-radius: 0 0 12px 12px;
+    padding: 12px;
+  }
+
+  /* Hero actions stacked */
+  .hero-actions {
+    flex-direction: column;
+  }
+  .hero-actions a,
+  .hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Quick grid 2 col on mobile */
+  .quick-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Featured orgs */
+  .featured-orgs {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Split section stack */
+  .split {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  /* Trust grid stack */
+  .trust-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  /* Footer grid */
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  /* Community strip */
+  .community-strip .strip-btns {
+    flex-direction: column;
+    align-items: center;
+  }
+  .strip-btn {
+    width: 100%;
+    max-width: 260px;
+    justify-content: center;
+  }
+
+  /* Employer CTA */
+  .employer-cta .container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Article grid */
+  .article-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Subject grid */
+  .subject-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* How grid */
+  .how-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .quick-grid {
+    grid-template-columns: 1fr;
+  }
+  .featured-orgs {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  #homeStats {
+    gap: 6px;
+  }
+  #homeStats > div {
+    min-width: 60px;
+    padding: 6px 8px;
+  }
+}
+
+/* ── Fix 3: Community strip styling (if not already there) ── */
+.community-strip {
+  background: #0a1828;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 1.25rem 0;
+  text-align: center;
+}
+.community-strip p {
+  color: #8faac8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.community-strip p strong { color: #ffffff; }
+.strip-btns {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.strip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+.strip-btn:hover { opacity: 0.88; }
+.strip-btn.tg { background: #229ED9; color: #ffffff; }
+.strip-btn.wa { background: #25D366; color: #ffffff; }
+
+/* ── Fix 4: Nav count badge ── */
+.nav-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #059669;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  padding: 0 5px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ── Fix 5: Inner page text not cutting ── */
+.page {
+  overflow: visible;
+}
+.page-hero,
+.page-hero .container {
+  overflow: visible;
+  width: 100%;
+  box-sizing: border-box;
+}
