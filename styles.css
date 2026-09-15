@@ -532,3 +532,98 @@ nav a[data-count]::after{
 
 /* ── Hide WhatsApp join button until channel is ready ────── */
 .btn-wp{display:none!important}
+
+/* ═══════════════════════════════════════════════════════════
+   COMPREHENSIVE FIX BATCH
+═══════════════════════════════════════════════════════════ */
+
+/* Fix 1: Page title cutting on left side */
+body{overflow-x:hidden!important}
+.page-hero,.hero{overflow:visible!important}
+.page-hero .container,.hero .container{
+  padding-left:clamp(1rem,4vw,2rem)!important;
+  padding-right:clamp(1rem,4vw,2rem)!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  max-width:1200px!important;
+  margin:0 auto!important;
+}
+.page-hero .eyebrow,.page-hero h1,.page-hero h2,.page-hero p{
+  padding-left:0!important;
+  margin-left:0!important;
+}
+
+/* Fix 2: Filter panel bottom cut — make it scrollable */
+.filters-panel,.filter-sidebar,[class*="filter"]{
+  max-height:calc(100vh - 120px)!important;
+  overflow-y:auto!important;
+  scrollbar-width:thin!important;
+  padding-bottom:2rem!important;
+}
+
+/* Fix 3: Footer logo — show "Civil" text */
+footer .logo,footer a.logo{
+  color:#fff!important;
+  font-weight:900!important;
+  font-size:1.2rem!important;
+  letter-spacing:-0.04em!important;
+  text-decoration:none!important;
+}
+footer .logo span,footer a.logo span{
+  color:var(--fresh-green,#10b981)!important;
+  font-style:italic!important;
+}
+
+/* Fix 4: Nav search button not overlapping job count */
+.nav-tools,[class*="nav-actions"],[class*="header-right"]{
+  display:flex!important;
+  align-items:center!important;
+  gap:.5rem!important;
+  flex-shrink:0!important;
+  z-index:10!important;
+  position:relative!important;
+}
+nav a[data-count]::after{
+  position:relative!important;
+  display:inline-block!important;
+  margin-left:4px!important;
+  font-size:.62rem!important;
+  padding:1px 6px!important;
+  border-radius:10px!important;
+  background:var(--fresh-green,#10b981)!important;
+  color:#fff!important;
+  font-weight:800!important;
+  vertical-align:middle!important;
+  line-height:1.5!important;
+}
+
+/* Fix 5: Community bar Telegram button visible */
+.btn-tg{
+  display:inline-flex!important;
+  visibility:visible!important;
+}
+
+/* Fix 6: Section page hero full coverage */
+.section.page-hero,[data-page] .page-hero{
+  width:100vw!important;
+  margin-left:-50vw!important;
+  left:50%!important;
+  position:relative!important;
+}
+
+/* Fix 7: Mobile nav items never cut */
+@media(max-width:900px){
+  nav a.route{
+    font-size:.7rem!important;
+    padding:3px 5px!important;
+    white-space:nowrap!important;
+  }
+  #mainNav{
+    overflow-x:auto!important;
+    flex-wrap:nowrap!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+}
+@media(max-width:600px){
+  nav a.route{font-size:.65rem!important;padding:2px 4px!important}
+}
