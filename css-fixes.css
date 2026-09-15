@@ -1,274 +1,140 @@
 /* ============================================================
-   CIVILCAREER CSS FIXES — Append these at the BOTTOM of styles.css
-   Fixes: mobile nav overlap, stats/search overlap
+   CIVILCAREER CSS FIXES v2 — Replace entire css-fixes.css
    ============================================================ */
 
-/* ── Fix 1: Stats bar — move inside hero, prevent search overlap ── */
+/* ── FIX 1: Text cutting on ALL inner pages ── */
+html, body {
+  overflow-x: hidden;
+}
+
+.page,
+section.page {
+  overflow: visible !important;
+  width: 100% !important;
+}
+
+.page-hero {
+  overflow: visible !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+.page-hero .container,
+.container {
+  width: 100% !important;
+  max-width: 1200px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+/* ── FIX 2: Stats do NOT overlap search bar ── */
 #homeStats {
-  position: relative;
-  z-index: 2;
-  padding: 1.25rem 1.5rem 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  position: relative !important;
+  z-index: 2 !important;
+  padding: 1.25rem 1.5rem 1.5rem !important;
+  margin-bottom: 0 !important;
 }
 
-/* Search wrap sits BELOW hero with clear separation */
 .search-wrap {
-  position: relative;
-  z-index: 5;
-  background: transparent;
-  padding: 1.25rem 0 0.5rem;
-  margin-top: 0;
+  position: relative !important;
+  z-index: 3 !important;
+  margin-top: 0 !important;
+  padding-top: 1rem !important;
+  background: transparent !important;
+  clear: both !important;
 }
 
-/* ── Fix 2: Mobile nav — full screen overlay, not a white box ── */
+/* ── FIX 3: Mobile nav full screen overlay ── */
 @media (max-width: 768px) {
   #mainNav {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(11, 31, 58, 0.98);
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 6px;
-    z-index: 999;
-    padding: 2rem;
-    backdrop-filter: blur(8px);
-    overflow-y: auto;
+    display: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(11,31,58,0.98) !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+    z-index: 9999 !important;
+    padding: 2rem !important;
+    width: 100% !important;
   }
   #mainNav.open {
-    display: flex;
+    display: flex !important;
   }
   #mainNav a {
-    font-size: 1.1rem;
-    font-weight: 700;
-    padding: 12px 28px;
-    border-radius: 10px;
-    color: #9db3d0;
-    width: 100%;
-    text-align: center;
-    border: 1px solid rgba(255,255,255,0.06);
-    background: rgba(255,255,255,0.03);
+    font-size: 1.1rem !important;
+    padding: 12px 28px !important;
+    border-radius: 10px !important;
+    color: #9db3d0 !important;
+    width: 100% !important;
+    text-align: center !important;
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    white-space: nowrap !important;
   }
   #mainNav a.active,
   #mainNav a:hover {
-    background: rgba(201, 151, 60, 0.12);
-    color: #c9973c;
-    border-color: rgba(201, 151, 60, 0.2);
-  }
-
-  /* Close button inside nav overlay */
-  #mainNav::before {
-    content: '×';
-    position: absolute;
-    top: 20px;
-    right: 24px;
-    font-size: 2rem;
-    color: #9db3d0;
-    cursor: pointer;
-    line-height: 1;
-  }
-
-  /* Hide nav tools on mobile */
-  .nav-tools {
-    display: none;
-  }
-
-  /* Show menu button */
-  .menu-btn {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 6px;
-    margin-left: auto;
-    z-index: 1001;
-  }
-  .menu-btn i {
-    display: block;
-    width: 22px;
-    height: 2px;
-    background: #ffffff;
-    border-radius: 2px;
-    transition: all 0.2s;
+    background: rgba(201,151,60,0.15) !important;
+    color: #c9973c !important;
   }
 
   /* Stats smaller on mobile */
+  #homeStats {
+    gap: 6px !important;
+    padding: 1rem !important;
+  }
   #homeStats > div {
-    min-width: 70px;
-    padding: 8px 10px;
+    min-width: 68px !important;
+    padding: 8px 10px !important;
   }
   #homeStats > div > div:first-child {
-    font-size: 1.3rem;
+    font-size: 1.2rem !important;
   }
   #homeStats > div > div:last-child {
-    font-size: 0.6rem;
-  }
-
-  /* Hero padding fix */
-  .hero {
-    padding: 1.75rem 0 1rem;
-  }
-  .hero h1 {
-    font-size: 1.65rem;
-  }
-  .hero-panel {
-    display: none;
-  }
-
-  /* Page hero fix — no text cutting on inner pages */
-  .page-hero {
-    padding: 2rem 0 1.5rem;
-    overflow: hidden;
-  }
-  .page-hero .container {
-    padding: 0 1rem;
-    overflow: visible;
-    width: 100%;
-  }
-  .page-hero h1 {
-    font-size: 1.4rem;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-  }
-
-  /* Listing layout — stack on mobile */
-  .listing-layout {
-    grid-template-columns: 1fr;
-  }
-  .filters {
-    display: none;
-  }
-  .filters.open {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 500;
-    overflow-y: auto;
-    border-radius: 0;
-  }
-  .mobile-filter-btn {
-    display: inline-flex;
+    font-size: 0.58rem !important;
   }
 
   /* Cards full width */
   .cards.three {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 
-  /* Search bar stacked */
+  /* Search stacked */
   .smart-search {
-    flex-direction: column;
-  }
-  .smart-search label {
-    border-right: none;
-    border-bottom: 1px solid #e2e8f0;
-  }
-  .smart-search .btn {
-    border-radius: 0 0 12px 12px;
-    padding: 12px;
+    flex-direction: column !important;
   }
 
   /* Hero actions stacked */
   .hero-actions {
-    flex-direction: column;
+    flex-direction: column !important;
   }
   .hero-actions a,
   .hero-actions .btn {
-    width: 100%;
-    justify-content: center;
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
   }
 
-  /* Quick grid 2 col on mobile */
-  .quick-grid {
-    grid-template-columns: 1fr 1fr;
+  /* Listing stack */
+  .listing-layout {
+    grid-template-columns: 1fr !important;
   }
 
-  /* Featured orgs */
-  .featured-orgs {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  /* Split section stack */
-  .split {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  /* Trust grid stack */
-  .trust-grid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-
-  /* Footer grid */
+  /* Footer */
   .footer-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-  }
-
-  /* Community strip */
-  .community-strip .strip-btns {
-    flex-direction: column;
-    align-items: center;
-  }
-  .strip-btn {
-    width: 100%;
-    max-width: 260px;
-    justify-content: center;
-  }
-
-  /* Employer CTA */
-  .employer-cta .container {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  /* Article grid */
-  .article-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* Subject grid */
-  .subject-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* How grid */
-  .how-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: 1fr 1fr !important;
   }
 }
 
-@media (max-width: 400px) {
-  .quick-grid {
-    grid-template-columns: 1fr;
-  }
-  .featured-orgs {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  #homeStats {
-    gap: 6px;
-  }
-  #homeStats > div {
-    min-width: 60px;
-    padding: 6px 8px;
-  }
-}
-
-/* ── Fix 3: Community strip styling (if not already there) ── */
+/* ── FIX 4: Community strip ── */
 .community-strip {
   background: #0a1828;
   border-top: 1px solid rgba(255,255,255,0.06);
@@ -301,13 +167,11 @@
   border: none;
   cursor: pointer;
   font-family: inherit;
-  transition: opacity 0.15s;
 }
-.strip-btn:hover { opacity: 0.88; }
 .strip-btn.tg { background: #229ED9; color: #ffffff; }
 .strip-btn.wa { background: #25D366; color: #ffffff; }
 
-/* ── Fix 4: Nav count badge ── */
+/* ── FIX 5: Nav count badge ── */
 .nav-count {
   display: inline-flex;
   align-items: center;
@@ -322,28 +186,4 @@
   padding: 0 5px;
   margin-left: 4px;
   vertical-align: middle;
-}
-
-/* ── Fix 5: Inner page text not cutting ── */
-.page {
-  overflow: visible;
-}
-.page-hero,
-.page-hero .container {
-  overflow: visible;
-  width: 100%;
-  box-sizing: border-box;
-}
-.page-hero .container,
-.page-hero .container * {
-  overflow: visible !important;
-}
-
-section.page {
-  overflow: visible !important;
-}
-
-.container {
-  padding-left: 1.5rem !important;
-  padding-right: 1.5rem !important;
 }
